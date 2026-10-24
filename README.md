@@ -1,6 +1,8 @@
 # eAkte
 
-A multi-tenant electronic file management system (eAkte) built with **ASP.NET Core** and **SQL Server**, extended with **direct editing of Microsoft Office documents via WebDAV**. 
+eAkte is my second big project at **DreiF in Berlin**, and I built it from scratch. It is a complete, multi-tenant electronic file management system: users create Akten and Vorgänge, organise documents in folders, keep track of contacts and changes, and work on Office documents directly in the browser.
+
+I built it with **ASP.NET Core**, **C#** and **SQL Server**. The front end is plain HTML, CSS and JavaScript.
 
 ![eAkte overview 1](docs/screenshots/1.png)
 
@@ -8,14 +10,16 @@ A multi-tenant electronic file management system (eAkte) built with **ASP.NET Co
 
 ![eAkte overview 3](docs/screenshots/3.png)
 
-## Features
+## What it does
 
-### Multi-tenancy (Mandant system)
-- Several clients (tenants) run on one installation.
-- Data of different tenants is strictly isolated; every query is scoped to the active tenant.
+### One system, many companies
+The system is multi-tenant (in German: *mandantenfähig*). Several clients, called **Mandanten**, work in the same installation, and their data is strictly separated. Every query is limited to the active Mandant, so nobody can see another company's files.
 
-### Hierarchical file structure
-Documents are organised in a deep, flexible hierarchy:
+### Akten and Vorgänge
+The heart of eAkte is creating and managing **Akten** (files) and **Vorgänge** (cases). An Akte is created inside a category and group, and each Akte can hold any number of Vorgänge that keep related work, documents and information together. Inside a Vorgang, everything is organised with folders and subfolders.
+
+### A deep file structure
+Documents don't end up in one big pile. They live in a hierarchy that mirrors how files are organised in real offices:
 
 ```
 Mandant
@@ -29,52 +33,33 @@ Mandant
                                     └── Dokument
 ```
 
-- Folders can be nested to any depth.
-- Documents are stored inside the matching file structure.
+Folders can be nested as deeply as needed, and every document sits in exactly the right place in this structure.
+
+### Change history
+Changes are recorded, so it is always possible to see what happened to a file or case, who changed it and when.
+
+### Contacts
+Contacts can be stored and linked to the files and cases they belong to, so the people involved are always at hand.
+
+### Import, export and PDF
+Documents can be **imported** into any folder and **exported** for use outside the system. A **built-in PDF converter** turns finished documents into PDF directly in the application, which is handy for archiving, sharing and printing.
+
+### Editing Office documents in the browser
+Microsoft Office documents can be opened straight from eAkte in Word, edited there, and saved back into the system through **WebDAV**, with no manual download and upload. It works well with Microsoft Word 2019.
+
+### Check-out and check-in
+To make sure two people don't overwrite each other's work, a document is **checked out** (locked) while someone is editing it and **checked in** again when they are done. The system stores who locked the document and since when.
 
 ### Roles and permissions
-- A flexible **role system** controls who can do what in the application.
-- **Different permissions per function**: for example viewing, creating, editing, deleting, importing, exporting and converting documents can each be granted or denied separately.
-- **Object-level access control**: access can be restricted per object, such as an Akte, Vorgang, folder or document, so users only see and work with the objects they are authorised for.
-- Roles can be combined, so different users get exactly the access their job requires.
-- Permissions are enforced on the server, not only hidden in the interface.
-- Works together with the tenant system: users only ever see data of their own Mandant.
+Not every user should be allowed to do everything. A flexible **role system** controls who can do what: viewing, creating, editing, deleting, importing, exporting and converting can each be granted separately. Access can also be restricted **per object**, such as an Akte, a Vorgang, a folder or a document, and roles can be combined. All checks are enforced on the server, not just hidden in the interface, and they work together with the Mandant separation.
 
-### Files and cases (Akten & Vorgänge)
-- Create and manage **Akten** (files) within categories and groups.
-- Create **Vorgänge** (cases/processes) inside an Akte to keep related work and documents together.
-- Organise each Vorgang with folders and subfolders.
+### Single sign-on (in planning)
+The plan is to connect eAkte to a central login service via **OpenID Connect**, so that several applications, including a .NET Framework 4.8 app, can share one sign-in. Failed sign-ins show only a generic message, so no internal details are revealed.
 
-### Document import and export
-- **Import** documents into any folder, individually or several at once.
-- **Export** documents for use outside the system.
-- Documents always land in the correct place in the file structure and tenant.
+## Technologies
 
-### Built-in PDF converter
-- Convert documents to **PDF** directly inside the application.
-- No external tools or manual conversion steps required.
-- Useful for archiving, sharing and printing finished documents.
-
-### Direct Office editing via WebDAV
-- Open Microsoft Office documents directly from the web application.
-- Edit in Word and save changes back to the system automatically.
-- Replaces the earlier workflow of downloading and uploading files through a separate helper program.
-- Tested with Microsoft Word 2019.
-
-### Document locking
-- **Check-out** locks a document while it is being edited.
-- **Check-in** releases it when work is finished.
-- Prevents several users from editing the same document at the same time.
-- Lock information (who locked it, since when) is stored with the document.
-
-### Single sign-on (planned architecture)
-- Designed to integrate with a central login service using **OpenID Connect**, so that several applications (ASP.NET Core and .NET Framework 4.8) can share one sign-in.
-- Generic error messages for failed sign-ins, so no internal details are exposed to the user.
-
-## Tech stack
-
-| Layer | Technology |
-|-------|------------|
+| Area | What I used |
+|------|-------------|
 | Backend | ASP.NET Core, C# |
 | Database | Microsoft SQL Server |
 | Documents | WebDAV, Microsoft Office integration, PDF conversion |
@@ -82,12 +67,10 @@ Mandant
 | Front end | HTML, CSS, JavaScript |
 | IDE | Visual Studio |
 
-## Security notes
+## Security
 
-- Secrets and connection strings are kept out of the repository.
-- All data access is scoped by tenant and protected by role-based permissions.
-- Documents are protected by locking during editing.
+Secrets and connection strings are not part of this repository. All data access is scoped by Mandant and protected by role-based permissions, and documents are locked while they are being edited.
 
-## Project background
+## About the project
 
-This project was created as a software development training project: extending an existing multi-tenant electronic file management system with direct Microsoft Office editing through WebDAV.
+After AdminPanel, eAkte was the bigger challenge: a full system with many parts that have to work together, from the file hierarchy, permissions and change history to locking and the Office integration. I designed and built it from the ground up.
