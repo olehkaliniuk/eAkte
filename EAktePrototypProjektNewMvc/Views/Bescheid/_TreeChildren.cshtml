@@ -1,0 +1,9 @@
+﻿@using EAktePrototypProjektNewMvc.Models.Tree
+@model List<TreeItem>
+
+<ul class="tree-children">
+    @foreach (var item in Model)
+    {
+        @Html.Partial("_TreeItem", item)
+    }
+</ul>

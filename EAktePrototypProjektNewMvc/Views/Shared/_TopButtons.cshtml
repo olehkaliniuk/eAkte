@@ -1,0 +1,357 @@
+﻿<div class="topbuttons-container">
+    <div class="dropdown">
+        <button class="dropdown-toggle  dropdown-toggle--left" onclick="toggleDropdown(this)">
+            Aktionen <i class="fa-solid fa-chevron-down dropdown-toggle-icon"></i>
+        </button>
+        <div class="dropdown-menu">
+            <!-- Buttons werden dynamisch per JS eingefügt -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const isAdmin = @Html.Raw(Context.Session.GetString("Rollen")?.Split(',').Contains("Administrator") == true ? "true" : "false");
+    // Nur in der Bescheidbearbeitung erlaubt.
+    const isBescheid = @Html.Raw(Context.Session.GetString("AccessCheckMode")?.Contains("Bescheidbearbeitung") == true ? "true" : "false");
+    // Admin-Modus.
+    const adminMode = @Html.Raw(Context.Session.GetString("AdminMode") == "true" ? "true" : "false");
+
+    function toggleDropdown(btn) {
+        const menu = btn.nextElementSibling;
+        menu.classList.toggle('open');
+        btn.querySelector('.dropdown-toggle-icon').classList.toggle('rotated');
+
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!btn.parentElement.contains(e.target)) {
+                menu.classList.remove('open');
+                btn.querySelector('.dropdown-toggle-icon').classList.remove('rotated');
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    }
+
+    function toggleSubmenu(submenu, e) {
+        e.stopPropagation();
+        document.querySelectorAll('.dropdown-submenu-menu.open').forEach(s => {
+            if (s !== submenu) s.classList.remove('open');
+        });
+        submenu.classList.toggle('open');
+    }
+
+    function renderDropdownButtons() {
+        const state = history.state;
+        const menu = document.querySelector('.topbuttons-container .dropdown-menu');
+        if (!menu) return;
+
+        menu.innerHTML = '';
+        let hasActions = false;
+
+        // Root (kein nodeType) - Kategorie erstellen
+        if (!state?.nodeType && isAdmin && isBescheid && adminMode) {
+            hasActions = true;
+            const createBtn = document.createElement('button');
+            createBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i> <div class="btn-divider"></div> Kategorie erstellen';
+            createBtn.onclick = () => openModalKaHaNe('kategorie', 'create');
+            menu.appendChild(createBtn);
+        }
+
+        // Kategorie - Hauptgruppe erstellen + Kategorie bearbeiten
+        if (state?.nodeType === 'Kategorie' && isAdmin && adminMode) {
+            hasActions = true;
+
+            const createBtn = document.createElement('button');
+            createBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i> <div class="btn-divider"></div> Hauptgruppe erstellen';
+            createBtn.onclick = () => openModalKaHaNe('hauptgruppe', 'create');
+            menu.appendChild(createBtn);
+
+            menu.appendChild(document.createElement('hr'));
+
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> <div class="btn-divider"></div> Kategorie bearbeiten';
+            editBtn.onclick = () => openModalKaHaNe('kategorie', 'edit');
+            menu.appendChild(editBtn);
+        }
+
+        // Hauptgruppe - Nebengruppe erstellen + Hauptgruppe bearbeiten
+        if (state?.nodeType === 'Hauptgruppe' && isAdmin && adminMode) {
+            hasActions = true;
+
+            const createBtn = document.createElement('button');
+            createBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i> <div class="btn-divider"></div> Nebengruppe erstellen';
+            createBtn.onclick = () => openModalKaHaNe('nebengruppe', 'create');
+            menu.appendChild(createBtn);
+
+            menu.appendChild(document.createElement('hr'));
+
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> <div class="btn-divider"></div> Hauptgruppe bearbeiten';
+            editBtn.onclick = () => openModalKaHaNe('hauptgruppe', 'edit');
+            menu.appendChild(editBtn);
+        }
+
+
+
+
+        // Nebengruppe - Akte erstellen
+        if (state?.nodeType === 'Nebengruppe') {
+            hasActions = true;
+
+            const createBtn = document.createElement('button');
+            createBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i> <div class="btn-divider"></div> Akte erstellen';
+            createBtn.onclick = () => openModal('akte', 'create');
+            menu.appendChild(createBtn);
+
+            // Nebengruppe bearbeiten (Admin).
+            if (isAdmin && adminMode) {
+                menu.appendChild(document.createElement('hr'));
+
+                const editBtn = document.createElement('button');
+                editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> <div class="btn-divider"></div> Nebengruppe bearbeiten';
+                editBtn.onclick = () => openModalKaHaNe('nebengruppe', 'edit');
+                menu.appendChild(editBtn);
+            }
+        }
+
+        // Akte - Vorgänge
+        if (state?.nodeType === 'Akte') {
+            hasActions = true;
+
+            const vorgangItem = document.createElement('div');
+            vorgangItem.className = 'dropdown-submenu';
+
+            const vorgangBtn = document.createElement('button');
+            vorgangBtn.innerHTML = '<i class="fa-solid fa-file"></i> <div class="btn-divider"></div> Vorgänge bearbeiten <i class="fa-solid fa-chevron-right"></i>';
+            vorgangItem.appendChild(vorgangBtn);
+
+            const submenu = document.createElement('div');
+            submenu.className = 'dropdown-submenu-menu';
+
+            let loaded = false;
+
+            vorgangBtn.onclick = (e) => {
+                toggleSubmenu(submenu, e);
+                if (!loaded) {
+                    loaded = true;
+                    submenu.innerHTML = '<div class="dropdown-empty">Lädt...</div>';
+                    fetch(`/bescheidbearbeitung/vorgaenge-by-akte/${state.objectId}`)
+                        .then(r => r.json())
+                        .then(vorgaenge => {
+                            submenu.innerHTML = '';
+                            if (vorgaenge.length === 0) {
+                                const empty = document.createElement('div');
+                                empty.className = 'dropdown-empty';
+                                empty.textContent = 'Keine Vorgänge vorhanden';
+                                submenu.appendChild(empty);
+                            } else {
+                                vorgaenge.forEach((v, index) => {
+                                    if (index > 0) submenu.appendChild(document.createElement('hr'));
+                                    const btn = document.createElement('button');
+                                    btn.innerHTML = `<i class="fa-solid fa-file"></i> <div class="btn-divider"></div> ${v.aktenzeichen ?? '(kein Aktenzeichen)'}`;
+                                    btn.onclick = () => openModal('akte', 'edit', v.objektId);
+                                    submenu.appendChild(btn);
+                                });
+                            }
+                        });
+                }
+            };
+
+            vorgangItem.appendChild(submenu);
+            menu.appendChild(vorgangItem);
+
+            menu.appendChild(document.createElement('hr'));
+
+            const createBtn = document.createElement('button');
+            createBtn.innerHTML = '<i class="fa-solid fa-plus"></i> <div class="btn-divider"></div> Vorgang erstellen';
+            createBtn.onclick = () => openModal('vorgang', 'create');
+            menu.appendChild(createBtn);
+        }
+
+        // Vorgang - bearbeiten
+        if (state?.nodeType === 'Vorgang') {
+            hasActions = true;
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> <div class="btn-divider"></div> Vorgang bearbeiten';
+            editBtn.onclick = () => openModal('vorgang', 'edit');
+            menu.appendChild(editBtn);
+        }
+
+        // Ordner - erstellen
+        if (state?.nodeType === 'Ordner') {
+            hasActions = true;
+
+            const ordnerItem = document.createElement('div');
+            ordnerItem.className = 'dropdown-submenu';
+            const ordnerBtn = document.createElement('button');
+            ordnerBtn.innerHTML = '<i class="fa-solid fa-folder"></i> <div class="btn-divider"></div> Ordner <i class="fa-solid fa-chevron-right"></i>';
+            ordnerItem.appendChild(ordnerBtn);
+            const ordnerSubmenu = document.createElement('div');
+            ordnerSubmenu.className = 'dropdown-submenu-menu';
+            ordnerBtn.onclick = (e) => toggleSubmenu(ordnerSubmenu, e);
+            const ordnerCreateBtn = document.createElement('button');
+            ordnerCreateBtn.innerHTML = '<i class="fa-solid fa-plus"></i> <div class="btn-divider"></div> Ordner erstellen';
+            ordnerCreateBtn.onclick = () => openModalOrdner('ordner', 'create');
+            ordnerSubmenu.appendChild(ordnerCreateBtn);
+            ordnerItem.appendChild(ordnerSubmenu);
+            menu.appendChild(ordnerItem);
+
+            menu.appendChild(document.createElement('hr'));
+
+            const dokItem = document.createElement('div');
+            dokItem.className = 'dropdown-submenu';
+            const dokBtn = document.createElement('button');
+            dokBtn.innerHTML = '<i class="fa-solid fa-file"></i> <div class="btn-divider"></div> Dokument <i class="fa-solid fa-chevron-right"></i>';
+            dokItem.appendChild(dokBtn);
+            const dokSubmenu = document.createElement('div');
+            dokSubmenu.className = 'dropdown-submenu-menu';
+            dokBtn.onclick = (e) => toggleSubmenu(dokSubmenu, e);
+            const dokCreateBtn = document.createElement('button');
+            dokCreateBtn.innerHTML = '<i class="fa-solid fa-plus"></i> <div class="btn-divider"></div> Dokument erstellen';
+            dokCreateBtn.onclick = () => openModalDokument('dokument', 'create');
+            dokSubmenu.appendChild(dokCreateBtn);
+            dokItem.appendChild(dokSubmenu);
+            menu.appendChild(dokItem);
+        }
+
+        // UnterOrdner - erstellen + bearbeiten
+        if (state?.nodeType === 'UnterOrdner') {
+            hasActions = true;
+
+            const ordnerItem = document.createElement('div');
+            ordnerItem.className = 'dropdown-submenu';
+            const ordnerBtn = document.createElement('button');
+            ordnerBtn.innerHTML = '<i class="fa-solid fa-folder"></i> <div class="btn-divider"></div> Ordner <i class="fa-solid fa-chevron-right"></i>';
+            ordnerItem.appendChild(ordnerBtn);
+            const ordnerSubmenu = document.createElement('div');
+            ordnerSubmenu.className = 'dropdown-submenu-menu';
+            ordnerBtn.onclick = (e) => toggleSubmenu(ordnerSubmenu, e);
+            const ordnerCreateBtn = document.createElement('button');
+            ordnerCreateBtn.innerHTML = '<i class="fa-solid fa-plus"></i> <div class="btn-divider"></div> Ordner erstellen';
+            ordnerCreateBtn.onclick = () => openModalOrdner('ordner', 'create');
+            ordnerSubmenu.appendChild(ordnerCreateBtn);
+            ordnerSubmenu.appendChild(document.createElement('hr'));
+            const ordnerEditBtn = document.createElement('button');
+            ordnerEditBtn.innerHTML = '<i class="fa-solid fa-pen"></i> <div class="btn-divider"></div> Ordner bearbeiten';
+            ordnerEditBtn.onclick = () => openModalOrdner('ordner', 'edit');
+            ordnerSubmenu.appendChild(ordnerEditBtn);
+            ordnerItem.appendChild(ordnerSubmenu);
+            menu.appendChild(ordnerItem);
+
+            menu.appendChild(document.createElement('hr'));
+
+            const dokItem = document.createElement('div');
+            dokItem.className = 'dropdown-submenu';
+            const dokBtn = document.createElement('button');
+            dokBtn.innerHTML = '<i class="fa-solid fa-file"></i> <div class="btn-divider"></div> Dokument <i class="fa-solid fa-chevron-right"></i>';
+            dokItem.appendChild(dokBtn);
+            const dokSubmenu = document.createElement('div');
+            dokSubmenu.className = 'dropdown-submenu-menu';
+            dokBtn.onclick = (e) => toggleSubmenu(dokSubmenu, e);
+            const dokCreateBtn = document.createElement('button');
+            dokCreateBtn.innerHTML = '<i class="fa-solid fa-plus"></i> <div class="btn-divider"></div> Dokument erstellen';
+            dokCreateBtn.onclick = () => openModalDokument('dokument', 'create');
+            dokSubmenu.appendChild(dokCreateBtn);
+            dokItem.appendChild(dokSubmenu);
+            menu.appendChild(dokItem);
+        }
+
+        // Ordner - Vorlage erstellen
+        if (state?.nodeType === 'Ordner' || state?.nodeType === 'UnterOrdner') {
+
+            menu.appendChild(document.createElement('hr'));
+
+            const vorlageItem = document.createElement('div');
+            vorlageItem.className = 'dropdown-submenu';
+
+            const vorlageBtn = document.createElement('button');
+            vorlageBtn.innerHTML = '<i class="fa-solid fa-file-circle-plus"></i> <div class="btn-divider"></div> Vorlage <i class="fa-solid fa-chevron-right"></i>';
+            vorlageItem.appendChild(vorlageBtn);
+
+            const vorlageSubmenu = document.createElement('div');
+            vorlageSubmenu.className = 'dropdown-submenu-menu';
+
+            let vorlageLoaded = false;
+
+            vorlageBtn.onclick = (e) => {
+                toggleSubmenu(vorlageSubmenu, e);
+                if (!vorlageLoaded) {
+                    vorlageLoaded = true;
+
+                    // FolderId from URL: ?ObjectId=...
+                    const folderId = new URLSearchParams(window.location.search).get('ObjectId');
+                    if (!folderId) {
+                        console.error('FolderId (ObjectId) nicht in der URL gefunden.');
+                        vorlageSubmenu.innerHTML = '<div class="dropdown-empty">Fehler: ObjectId fehlt.</div>';
+                        return;
+                    }
+
+                    vorlageSubmenu.innerHTML = '<div class="dropdown-empty">Lädt...</div>';
+                    fetch(`/bescheidbearbeitung/vorlagen-by-vorgangsTypName-and-ablageklasse?objectId=${encodeURIComponent(folderId)}`)
+                        .then(r => r.json())
+                        .then(vorlagen => {
+                            vorlageSubmenu.innerHTML = '';
+                            if (vorlagen.length === 0) {
+                                const empty = document.createElement('div');
+                                empty.className = 'dropdown-empty';
+                                empty.textContent = 'Keine Vorlagen vorhanden';
+                                vorlageSubmenu.appendChild(empty);
+                            } else {
+                                vorlagen.forEach((v, index) => {
+                                    if (index > 0) vorlageSubmenu.appendChild(document.createElement('hr'));
+                                    const btn = document.createElement('button');
+                                    btn.innerHTML = `<i class="fa-solid fa-file"></i> <div class="btn-divider"></div> ${v.vorlageName}`;
+                                    btn.onclick = () => {
+                                        btn.disabled = true;
+                                        fetch('/bescheidbearbeitung/dokument-aus-vorlage-erzeugen', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                vorlageVersionId: v.vorlageVersionId,
+                                                folderId: folderId
+                                            })
+                                        })
+                                        .then(r => {
+                                            if (!r.ok) return r.json().then(body => { throw new Error(JSON.stringify(body)); });
+                                            return r.json();
+                                        })
+                                        .then(neuesDokument => {
+                                            console.log('Dokument erzeugt:', neuesDokument);
+                                            window.location.reload();
+                                        })
+                                        .catch(err => console.error(err))
+                                        .finally(() => { btn.disabled = false; });
+                                    };
+                                    vorlageSubmenu.appendChild(btn);
+                                });
+                            }
+                        });
+                }
+            };
+
+            vorlageItem.appendChild(vorlageSubmenu);
+            menu.appendChild(vorlageItem);
+        }
+
+        // Dokument - bearbeiten
+        if (state?.nodeType === 'Dokument') {
+            hasActions = true;
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> <div class="btn-divider"></div> Dokument bearbeiten';
+            editBtn.onclick = () => openModalDokument('dokument', 'edit');
+            menu.appendChild(editBtn);
+        }
+
+        // Keine Aktionen
+        if (!hasActions) {
+            const info = document.createElement('div');
+            info.className = 'dropdown-empty';
+            const noActionIcon = !state?.nodeType ? 'fa-circle-info' : 'fa-ban';
+            info.innerHTML = `<i class="fa-solid ${noActionIcon}"></i> <div class="btn-divider"></div> ${!state?.nodeType ? 'Bitte einen Eintrag auswählen' : 'Keine Aktionen verfügbar'}`;
+            menu.appendChild(info);
+        }
+
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderDropdownButtons();
+    });
+</script>

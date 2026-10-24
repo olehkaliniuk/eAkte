@@ -1,0 +1,140 @@
+﻿/* ============================================================
+   SPALTEN-DIALOG — zentriertes Modal, minimalistisch
+   ============================================================ */
+.column-dialog {
+    /* Zentrierung (funktioniert auch bei globalem margin-reset). */
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(380px, calc(100vw - 32px));
+    max-height: calc(100vh - 64px);
+    padding: 20px;
+    overflow-y: auto;
+    background: var(--color-bg-second);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--box-shadows-hoover);
+}
+
+    .column-dialog::backdrop {
+        background: rgba(13, 17, 23, 0.25);
+    }
+
+    .column-dialog h3 {
+        margin: 0 0 14px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--color-text-hoover);
+    }
+
+/* ---------- Liste ---------- */
+.column-list {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    border-top: 1px solid var(--color-border-lines);
+}
+
+    .column-list li {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--color-border-lines);
+    }
+
+        .column-list li label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+    .column-list input[type="checkbox"] {
+        accent-color: var(--color-accent);
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    /* ▲ ▼ Buttons */
+    .column-list li button {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        font-size: 0.7rem;
+        line-height: 1;
+        color: var(--color-text);
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background .15s, border-color .15s;
+    }
+
+        .column-list li button:hover:not(:disabled) {
+            background: var(--color-bg);
+            border-color: var(--color--input-border);
+        }
+
+        .column-list li button:disabled {
+            opacity: 0.25;
+            cursor: default;
+        }
+
+/* ---------- Aktionen ---------- */
+.column-dialog-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .column-dialog-actions button {
+        padding: 7px 14px;
+        font: inherit;
+        font-size: 0.9rem;
+        color: var(--color-text);
+        background: var(--color-bg-second);
+        border: 1px solid var(--color--input-border);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: background .15s, border-color .15s, box-shadow .15s;
+    }
+
+        .column-dialog-actions button:hover {
+            background: var(--color-bg);
+        }
+
+    /* "Zurücksetzen" — links, dezent als Text-Button */
+    .column-dialog-actions [data-act="reset"] {
+        margin-right: auto;
+        color: var(--color-text-small);
+        background: none;
+        border-color: transparent;
+    }
+
+        .column-dialog-actions [data-act="reset"]:hover {
+            background: none;
+            color: var(--color-red-text);
+        }
+
+    /* "Speichern" — Akzent */
+    .column-dialog-actions [data-act="save"] {
+        color: var(--color-btn-text);
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+    }
+
+        .column-dialog-actions [data-act="save"]:hover {
+            background: var(--color-accent-hover);
+            border-color: var(--color-accent-hover);
+        }
+
+.column-dialog button:focus-visible,
+.column-dialog input:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}

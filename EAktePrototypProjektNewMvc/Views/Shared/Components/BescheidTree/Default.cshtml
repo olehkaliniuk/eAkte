@@ -1,0 +1,19 @@
+﻿@using EAktePrototypProjektNewMvc.Models.Tree
+@model BescheidTreeViewModel
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="text-error ">
+        <i class="fa-solid fa-circle-exclamation icon-error"></i>
+        <span>@Model.ErrorMessage</span>
+    </div>
+}
+else
+{
+    <ul class="tree-root">
+        @foreach (var item in Model.Items)
+        {
+            @Html.Partial("_TreeItem", item)
+        }
+    </ul>
+}

@@ -1,0 +1,162 @@
+﻿@using EAktePrototypProjektNewMvc.Models.CreateAkte.Kontakte
+@using Microsoft.AspNetCore.Html
+@model KontaktViewModel
+
+
+@functions{
+    public IHtmlContent SortHeader(string column, string title, string currentColumn, string currentDirection)
+    {
+        var arrowHtml = "";
+        if (currentColumn == column)
+        {
+            if (currentDirection == "asc")
+                /* Pfeil nach oben — Klasse sort-asc. */
+                arrowHtml = " <span class=\"sort-arrow sort-asc\">▲</span>";
+            else
+                /* Pfeil nach unten — Klasse sort-desc. */
+                arrowHtml = " <span class=\"sort-arrow sort-desc\">▼</span>";
+        }
+        return new HtmlString(
+            $"<th onclick=\"sortKontakte('{column}')\" style=\"cursor:pointer;\">{title}{arrowHtml}</th>"
+        );
+    }
+}
+
+
+<input type="hidden" id="kSortColumn"    value="@Model.SortColumn" />
+<input type="hidden" id="kSortDirection" value="@Model.SortDirection" />
+
+<table class="modal-table" id="kontakteTable" ondragover="handleKontakteDragOver(event)" ondrop="handleKontakteDrop(event)">
+    <thead>
+        <tr class="search">
+            <th style="width:90px;">
+                <button class="p-btn" onclick="addKontakteRow()" title="Neu">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </th>
+            <th><input id="kSearchAnrede"           class="k-filter" value="@Model.Search.Anrede"           placeholder="Anrede" /></th>
+            <th><input id="kSearchVorname"          class="k-filter" value="@Model.Search.Vorname"          placeholder="Vorname" /></th>
+            <th><input id="kSearchName"             class="k-filter" value="@Model.Search.Name"             placeholder="Name" /></th>
+            <th><input id="kSearchEmail"            class="k-filter" value="@Model.Search.Email"            placeholder="E-Mail Adresse" /></th>
+            <th><input id="kSearchEmailAnzeigename" class="k-filter" value="@Model.Search.EmailAnzeigename" placeholder="E-Mail Anzeigename" /></th>
+            <th><input id="kSearchEmailAn"          class="k-filter" value="@Model.Search.EmailAn"          placeholder="E-Mail an" /></th>
+            <th><input id="kSearchTelefon"          class="k-filter" value="@Model.Search.Telefon"          placeholder="Telefon" /></th>
+            <th><input id="kSearchFax"              class="k-filter" value="@Model.Search.Fax"              placeholder="Fax" /></th>
+        </tr>
+        <tr>
+            <th>Aktionen</th>
+            @SortHeader("Anrede",           "Anrede",             Model.SortColumn, Model.SortDirection)
+            @SortHeader("Vorname",          "Vorname",            Model.SortColumn, Model.SortDirection)
+            @SortHeader("Name",             "Name",               Model.SortColumn, Model.SortDirection)
+            @SortHeader("Email",            "E-Mail Adresse",     Model.SortColumn, Model.SortDirection)
+            @SortHeader("EmailAnzeigename", "E-Mail Anzeigename", Model.SortColumn, Model.SortDirection)
+            @SortHeader("EmailAn",          "E-Mail an",          Model.SortColumn, Model.SortDirection)
+            @SortHeader("Telefon",          "Telefon",            Model.SortColumn, Model.SortDirection)
+            @SortHeader("Fax",              "Fax",                Model.SortColumn, Model.SortDirection)
+        </tr>
+    </thead>
+    <tbody id="kontakteTbody">
+        @if (Model.Kontakte != null && Model.Kontakte.Count > 0)
+        {
+            @foreach (var k in Model.Kontakte)
+            {
+                <tr class="k-row-view" data-id="@k.Id">
+                    <td class="k-actions">
+                        <button class="p-btn" onclick="editKontakteRow(this)" title="Bearbeiten">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <button class="p-btn p-btn-danger" onclick="deleteKontakte(@k.Id)" title="Löschen">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                    <td>@k.Anrede</td>
+                    <td>@k.Vorname</td>
+                    <td>@k.Name</td>
+                    <td>@k.Email</td>
+                    <td>@k.EmailAnzeigename</td>
+                    <td>@k.EmailAn</td>
+                    <td>@k.Telefon</td>
+                    <td>@k.Fax</td>
+                </tr>
+
+
+                <tr class="k-row-edit" data-id="@k.Id" style="display:none;">
+                    <td class="k-actions">
+                        <button class="p-btn p-btn-success" onclick="saveKontakteRow(this, @k.Id)" title="Speichern">
+                            <i class="fa fa-check"></i>
+                        </button>
+                        <button class="p-btn" onclick="cancelKontakteRow(this)" title="Abbrechen">
+                            <i class="fa fa-xmark"></i>
+                        </button>
+                    </td>
+                    <td><input class="modal-input k-edit-Anrede"           value="@k.Anrede" /></td>
+                    <td><input class="modal-input k-edit-Vorname"          value="@k.Vorname" /></td>
+                    <td><input class="modal-input k-edit-Name"             value="@k.Name" /></td>
+                    <td><input class="modal-input k-edit-Email"            value="@k.Email" /></td>
+                    <td><input class="modal-input k-edit-EmailAnzeigename" value="@k.EmailAnzeigename" /></td>
+                    <td><input class="modal-input k-edit-EmailAn"          value="@k.EmailAn" /></td>
+                    <td><input class="modal-input k-edit-Telefon"          value="@k.Telefon" /></td>
+                    <td><input class="modal-input k-edit-Fax"              value="@k.Fax" /></td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr id="kEmptyRow">
+                <td colspan="9" style="text-align:center;">Kontakte hinzufügen (optional)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+
+<div class="pagination-container">
+    <div class="pagination-buttons">
+        @{ bool isEmpty = Model.TotalPages == 0; }
+        <button class="p-btn" onclick="loadKontaktePage(1)"
+            @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-left"></i>
+        </button>
+        <button class="p-btn" onclick="loadKontaktePage(@(Model.CurrentPage - 1))"
+            @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-left"></i>
+        </button>
+        <div class="pagination-page-info">
+            <input id="kCurrentPage" type="number" min="1"
+                max="@Model.TotalPages" value="@Model.CurrentPage"
+                @(isEmpty ? "disabled" : "") />
+            <span class="pagination-sep">von</span>
+            <span class="pagination-total">@Model.TotalPages</span>
+        </div>
+        <button class="p-btn" onclick="loadKontaktePage(@(Model.CurrentPage + 1))"
+            @(Model.CurrentPage >= Model.TotalPages || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-right"></i>
+        </button>
+        <button class="p-btn" onclick="loadKontaktePage(@Model.TotalPages)"
+            @(Model.CurrentPage >= Model.TotalPages || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-right"></i>
+        </button>
+    </div>
+    <div class="page-size">
+        <label class="pagination-label">Einträge pro Seite</label>
+        <select id="kPageSizeSelect" class="pagination-select">
+            @foreach (var size in new[] { 1, 5, 10, 25, 50, 100 })
+            {
+                var selected = Model.PageSize == size ? "selected" : "";
+                @:<option value="@size" @selected>@size</option>
+            }
+        </select>
+    </div>
+    <div class="actions2">
+        <span class="pagination-label">Gesamt</span>
+        <input class="pagination-count-input" value="@Model.TotalCount" readonly />
+        <button id="kResetBtn" class="p-btn" title="Aktualisieren">
+            <i class="fa fa-sync"></i>
+        </button>
+        <button class="p-btn" onclick="loadKontaktePage(1)" title="Suchen">
+            <i class="fa fa-search"></i>
+        </button>
+    </div>
+</div>

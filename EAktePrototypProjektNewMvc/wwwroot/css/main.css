@@ -1,0 +1,76 @@
+﻿/* ============================================================
+   MAIN.CSS — EINSTIEGSPUNKT: IMPORTIERT ALLE CSS-MODULE.
+   ============================================================ */
+
+/* Base */
+@import url('base/variables.css');
+
+@import url('base/base.css');
+
+@import url('base/media-queries.css');
+
+@import url('base/buttons-inputs.css');
+
+@import url('base/custom-alert.css');
+
+
+/* Login */
+@import url('login/login.css');
+
+
+/* Header Sidebar */
+@import url('header-sidebar/header.css');
+
+@import url('header-sidebar/nav-sidebar.css');
+
+
+/* Main Page Components */
+@import url('main-page/page-container.css');
+
+@import url('main-page/path-bar.css');
+
+@import url('main-page/buttons-bar.css');
+
+@import url('main-page/top-actions.css');
+
+
+/* Table */
+@import url('table/table.css');
+
+@import url('table/pagination.css');
+
+@import url('table/info-table.css');
+
+@import url('table/table-context-menu.css');
+
+
+/* User Profile */
+@import url('user-profile/profil-card.css');
+
+
+/* Search Page */
+@import url('search-page/search-page.css');
+
+
+/* Context Menu*/
+@import url('context-menu/context-menu.css');
+
+@import url('context-menu/move-object.css');
+
+
+/* Modals */
+@import url('modals/settings-panel.css');
+
+@import url('modals/address-modal.css');
+
+@import url('modals/create-edit-akte.css');
+
+@import url('modals/dokumente-modal.css');
+
+@import url('modals/ordner-modal.css');
+
+@import url('modals/kahane-modal.css');
+
+@import url('modals/gebuehren-modal.css');
+
+

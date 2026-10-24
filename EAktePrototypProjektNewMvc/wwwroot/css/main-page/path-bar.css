@@ -1,0 +1,212 @@
+﻿/* ============================================================
+   PATH BAR — NAVIGATIONS- UND SUCHLEISTE.
+   ============================================================ */
+.bescheid-container {
+    flex: 1; /* Gesamten verfügbaren Platz einnehmen. */
+    display: flex;
+    margin-left: 10px;
+}
+
+/* Container mit Flex-Zeile und Elementen zentriert. */
+#pathContainer {
+    display: flex;
+    flex-direction: row;
+    padding: 6px 6px 0 6px;
+    width: 100%;
+    align-items: center;
+}
+
+/* Pill-förmige Steuerelemente mit Akzentfarbe. */
+.form-control {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 2px 8px;
+    background-color: var(--color-accent); 
+    color: var(--color-path-text);
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    border-radius: 9px; 
+}
+
+    /* Icon-Farbe in der Pfadleiste. */
+    .form-control i {
+        color: var(--color-path-text);
+    }
+
+/* Pfad-Text transparent ohne sichtbaren Rahmen. */
+.currentPath {
+    border: none;
+    background-color: transparent;
+    color: var(--color-path-text);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+/* Suchschaltflächen-Icon-Farbe. */
+.btn-search i {
+    color: var(--color-path-text);
+}
+
+/* Suchfeld mit abgerundetem Design und hellem Hintergrund. */
+.input-suchen {
+    background-color: var(--color-bg-second);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-accent);
+    width: 260px;
+}
+
+/* Container für Pfad und Suchschaltflächen nebeneinander. */
+.path-search-btn-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.path-search-btn-container-inner {
+    display: flex;
+    flex-direction: row;
+}
+
+
+/* Dropdown-Menü für Suchergebnisse mit Schatten und Scrollbar. */
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 1050;
+    box-shadow: var(--box-shadows-hoover);
+    display: none;
+    margin-top: 8px;
+}
+
+.search-result-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border-lines);
+    transition: background-color 0.1s ease;
+}
+
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .search-result-item:hover {
+        background-color: var(--blue-bg);
+        color: var(--color-accent);
+    }
+
+    .search-result-item:active {
+        background-color: #dbeafe;
+    }
+
+.search-result-path {
+    font-size: 0.85em;
+    color: var(--color-text-small);
+    margin-top: 3px;
+}
+
+
+
+/* Toggle-Button für Suchmodus mit animiertem Schieberegler. */
+.search-mode-toggle-btn {
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    height: 100%;
+}
+
+    .search-mode-toggle-btn:hover {
+        background-color: var(--color-accent);
+    }
+
+.toggle-track {
+    position: relative;
+    width: 3.1429rem; /* 44px */
+    height: 2.1429rem; /* 30px */
+    background: var(--color-bg-second);
+    border: 0.0714rem solid var(--color--input-border); /* 1px */
+    border-radius: var(--radius-md); /* 9px */
+    display: flex;
+    align-items: center;
+    transition: border-color 0.25s ease;
+    overflow: hidden;
+    box-shadow: var(--box-shadows);
+    box-sizing: border-box;
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 0.1429rem; /* 2px */
+    bottom: 0.1429rem; /* 2px */
+    left: 0.1429rem; /* 2px */
+    width: calc(50% - 0.2143rem); /* 3px */
+    background: var(--color-accent);
+    border-radius: 0.4286rem; /* 6px */
+    box-shadow: var(--box-shadows-hoover);
+    transition: transform 0.25s ease, background 0.25s ease;
+    z-index: 2;
+}
+
+.toggle-letter {
+    position: relative;
+    flex: 1;
+    text-align: center;
+    font-size: 0.7857rem; /* 11px */
+    font-weight: 700;
+    line-height: 1;
+    z-index: 1;
+    transition: color 0.25s ease;
+}
+
+.toggle-letter-m {
+    color: var(--color-accent);
+}
+
+.toggle-letter-b {
+    color: var(--color-text-small);
+}
+/* Modus: Mitzeichnung -> Thumb links auf "M". */
+.search-mode-toggle-btn.mode-mitzeichnung .toggle-thumb {
+    transform: translateX(0);
+    background: var(--color-accent);
+}
+
+.search-mode-toggle-btn.mode-mitzeichnung .toggle-letter-m {
+    color: #FFFFFF;
+}
+
+.search-mode-toggle-btn.mode-mitzeichnung .toggle-letter-b {
+    color: var(--color-accent);
+}
+/* Modus: Bescheidbearbeitung -> Thumb rechts auf "B". */
+.search-mode-toggle-btn.mode-bescheid .toggle-track {
+    border-color: var(--color-accent);
+}
+
+.search-mode-toggle-btn.mode-bescheid .toggle-thumb {
+    transform: translateX(100%);
+    background: var(--color-accent);
+}
+
+.search-mode-toggle-btn.mode-bescheid .toggle-letter-b {
+    color: #FFFFFF;
+}
+
+.search-mode-toggle-btn.mode-bescheid .toggle-letter-m {
+    color: var(--color-accent);
+}
+
+.search-mode-toggle-btn:hover .toggle-track {
+    box-shadow: var(--box-shadows-hoover);
+}

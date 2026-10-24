@@ -1,0 +1,328 @@
+﻿@{
+    var showBack = !string.IsNullOrEmpty(Context.Request.Query["ObjectId"]);
+    var currentUserId = Context.Session.GetInt32("UserId");
+    var displayBack = showBack ? "inline-flex" : "none";
+    var displayDivider = showBack ? "flex" : "none";
+}
+
+
+
+<div class="buttons-container">
+    <div class="buttons-container-inner-first">
+        <button id="btnBack" style="display:@displayBack" onclick="goBack()" title="Zurück">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="btn-divider" id="btnDividerBack" style="display:@displayDivider"></div>
+        <button id="btnEditV" style="display:none;" onclick="openModal('vorgang', 'edit');" title="Vorgang bearbeiten">V</button>
+        <button id="btnOpenAdress" onclick="toggleAdresseModal()" title="Adresse bearbeiten">A</button>
+
+        <div class="btn-divider" id="btnDividerBack"></div>
+        <button id="btnOpenKladde" onclick="openKladde()" title="Kladde öffnen">K</button>
+        
+        @if (Context.Session.GetString("Rollen")?.Split(',').Contains("Administrator") == true)
+        {
+            <div class="btn-divider"></div>
+            <button id="btnOpenVorlagen" onclick="toggleVorlagenModal()" title="Vorlagenverwaltung"><i class="fa fa-list" style="margin-right: 5px;"></i>Vorlagenverwaltung</button>
+        }
+        <!-- PDF Converter -->
+        <button id="btnPDFConverter" style="display:none;" onclick="openPdfConverter()" title="PDF Konverter">
+            <i class="fas fa-file-pdf" style="margin-right: 5px;"></i>PDF Konverter
+        </button>
+
+        <!-- Dokumentenübersicht Button -->
+        <button id="Dokumentenubersicht" style="display:none;" onclick="openDokumentenubersicht()" title="Dokumentenübersicht">D</button>
+
+    </div>
+    <div class="buttons-container-inner-second">
+        <button id="searchType" title="Erweiterte Suche"><i style="margin-right:5px;" class="fas fa-search"></i>Erweiterte Suche</button>
+        <div class="btn-divider"></div>
+        <button id="excelBtn" onclick="exportVisibleTable()" title="Excel exportieren"><i class="fa-solid fa-file-excel"></i></button>
+    </div>
+</div>
+<!-- PDF Converter Container -->
+<div id="pdfConverterContainer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
+    <div style="position:relative; width:90%; height:90%; margin:2% auto; background:#fff; border-radius: 9px;">
+        <button onclick="closePdfConverter()" style="position:absolute; top:5px; right:5px; z-index:10000;">✕</button>
+        <iframe id="pdfConverterFrame"
+                style="width:100%; height:100%; border:none; border-radius: 9px;" 
+                src="about:blank">
+        </iframe>
+    </div>
+</div>
+
+<!-- Kladde Container -->
+<div id="kladdeContainer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
+    <div style="position:relative; width:90%; height:90%; margin:2% auto; background:#fff; border-radius: 9px;">
+        <button onclick="closeKladde()" style="position:absolute; top:5px; right:5px; z-index:10000;">✕</button>
+        <iframe id="kladdeFrame"
+                style="width:100%; height:100%; border:none; border-radius: 9px;"
+                src="about:blank">
+        </iframe>
+    </div>
+</div>
+
+
+<script>
+    // Aktiviert / deaktiviert Buttons und verwaltet den aktiven Zustand.
+    const buttons = document.querySelectorAll('.buttons-container button:not(#btnBack, #excelBtn, #btnOpenAdress)');
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const wasActive = this.classList.contains('active');
+            buttons.forEach(b => b.classList.remove('active'));
+            document.getElementById("btnOpenAdress").classList.remove('active');
+            if (!wasActive) {
+                this.classList.add('active');
+            }
+            // Schließt die Vorlagenansicht, wenn ein anderer Button gedrückt wird.
+            if (this.id !== "btnOpenVorlagen") {
+                modalVorlagen.style.display = "none";
+                tableContainer.style.display = "block";
+            }
+
+            // Schließt das Adress-Modal, wenn ein anderer Button gedrückt wird.
+            const modalAdresse = document.getElementById("adresseModal");
+            if (modalAdresse) modalAdresse.style.display = "none";
+        });
+    });
+
+    // Navigiert eine Seite zurück im Browser-Verlauf.
+    function goBack() {
+        window.history.back();
+    }
+
+    // Exportiert die aktuell sichtbare Tabelle nach Excel.
+    function exportVisibleTable() {
+
+        var tables = document.querySelectorAll("table");
+
+        var table = [...tables].find(t => t.offsetParent !== null);
+
+        if (!table)
+        {
+            return;
+        }
+
+        // Klont die Tabelle für den Export.
+        var clone = table.cloneNode(true);
+
+        // Entfernt die erste Spalte.
+        clone.querySelectorAll("tr").forEach(function(row) {
+            if (row.children.length > 0) {
+                row.removeChild(row.children[0]);
+            }
+        });
+
+        var workbook = XLSX.utils.table_to_book(clone, { sheet: "Sheet1" });
+
+        XLSX.writeFile(workbook, "table.xlsx");
+    }
+
+    // Zeigt den "Edit Vorgang" Button nur an, wenn der aktuelle Knoten ein Vorgang ist
+    // und die URL einen ObjectId-Parameter enthält.
+    function showBtnEditV() {
+        const btn = document.getElementById('btnEditV');
+        if (!btn) return;
+
+        const state = history.state;
+        const nodeType = state && state.nodeType;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const objectId = urlParams.get('ObjectId');
+        const hasObjectId = !!objectId; 
+
+        if (nodeType === 'Vorgang' && hasObjectId) {
+            btn.style.display = '';
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+
+       function showPDFConverterButton() {
+        const btn = document.getElementById('btnPDFConverter');
+        if (!btn) return;
+
+        const nodeType = history.state?.nodeType;
+        const input = document.getElementById('currentSubType');
+        const subType = input?.value.trim();
+
+        console.log('nodeType:', nodeType, 'subType:', subType);
+
+        btn.style.display =
+            (nodeType === 'Ordner' && subType === 'Bescheide') ? '' : 'none';
+    }
+
+    // Перепроверять кнопку при каждом изменении DOM
+    let pdfBtnTimer;
+    new MutationObserver(() => {
+        const btn = document.getElementById('btnPDFConverter');
+        if (!btn) return;
+
+        // Не папка: прячем кнопку и ничего больше не делаем
+        if (history.state?.nodeType !== 'Ordner') {
+            if (btn.style.display !== 'none') btn.style.display = 'none';
+            return;
+        }
+
+        clearTimeout(pdfBtnTimer);
+        pdfBtnTimer = setTimeout(showPDFConverterButton, 0);
+    }).observe(document.body, { childList: true, subtree: true });
+
+
+    function showDokumentenubersichtButton() {
+        const btn =document.getElementById('Dokumentenubersicht');
+        if (!btn) return;
+
+        const state = history.state;
+        const nodeType = state && state.nodeType;
+
+        if (nodeType === 'Akte') {
+            btn.style.display = '';
+        }else if (nodeType === 'Vorgang'){
+            btn.style.display = '';
+        }else if (nodeType === 'Ordner'){
+            btn.style.display = '';
+        }else if (nodeType === 'UnterOrdner'){
+            btn.style.display = '';
+        }else{
+            btn.style.display = 'none';
+        }
+    }
+        
+
+
+
+
+    // PDF-Konverter
+    // Funktion zum Abrufen eines Query-Parameters aus der URL.
+    function getQueryParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+    }
+
+    // Serialisiert die aktuelle Benutzer-ID.
+    const currentUserId = @Json.Serialize(currentUserId);
+
+    // Öffnet den PDF-Konverter in einem Iframe.
+    async function openPdfConverter() {
+        const objectId = getQueryParam('ObjectId');
+        if (!objectId) {
+            alert('ObjectId not found');
+            return;
+        }
+
+
+        let token;
+        try {
+            const response = await fetch(
+                `/bescheidbearbeitung/create-converter-session?objectId=${encodeURIComponent(objectId)}&mode=${encodeURIComponent('buttons')}`,
+                { method: 'POST', credentials: 'same-origin' }
+            );
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert('UserId not found — Sitzung möglicherweise abgelaufen');
+                } else {
+                    alert('PDF-Konverter-Session konnte nicht erstellt werden');
+                }
+                return;
+            }
+
+            const data = await response.json();
+            token = data.token;
+        } catch (err) {
+            alert('Fehler beim Erstellen der Konverter-Session');
+            return;
+        }
+        console.log('Opening PDF Converter');
+
+
+
+        const baseUrl = window.location.hostname === "localhost"
+            ? "https://localhost:7006/testKonverter/Index"
+            : "https://dreif-gmbh.de/testKonverter/Index";
+
+        const targetUrl = `${baseUrl}?Token=${encodeURIComponent(token)}`;
+
+
+        console.log('Opening PDF Converter with URL:', targetUrl);
+        const iframe = document.getElementById('pdfConverterFrame');
+        iframe.src = targetUrl;
+        document.getElementById('pdfConverterContainer').style.display = 'block';
+    }
+
+    // Schließt den PDF-Konverter und setzt das Iframe zurück.
+    function closePdfConverter() {
+        document.getElementById('pdfConverterContainer').style.display = 'none';
+        document.getElementById('pdfConverterFrame').src = 'about:blank';
+        document.getElementById('btnPDFConverter').classList.remove('active');
+
+    }
+
+
+
+
+
+    // Öffnet die Kladde in einem Iframe (vorerst statische URL).
+    async function openKladde() {
+
+
+        let token;
+        try {
+            const response = await fetch(
+                `/bescheidbearbeitung/create-kladde-session`,
+                { method: 'POST', credentials: 'same-origin' }
+            );
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert('UserId not found — Sitzung möglicherweise abgelaufen');
+                } else {
+                    alert('Kladde-Session konnte nicht erstellt werden');
+                }
+                return;
+            }
+
+            const data = await response.json();
+            token = data.tokenId;
+        } catch (err) {
+            alert('Fehler beim Erstellen der Kladde-Session');
+            return;
+        }
+        console.log('Opening Kladde');
+
+        const baseUrl = window.location.hostname === "localhost"
+            ? "http://localhost:64995/default.aspx"
+            : "https://dreif-gmbh.de/???????????????????????????";
+
+        const targetUrl = `${baseUrl}?tokenId=${encodeURIComponent(token)}`; // const targetUrl = `https://localhost:64995/default.aspx?tokenId=${encodeURIComponent(token)}`;
+
+
+        document.getElementById('kladdeFrame').src = targetUrl;
+        document.getElementById('kladdeContainer').style.display = 'block';
+    }
+
+    // Schließt die Kladde und setzt das Iframe zurück.
+    function closeKladde() {
+        document.getElementById('kladdeContainer').style.display = 'none';
+        document.getElementById('kladdeFrame').src = 'about:blank';
+        document.getElementById('btnOpenKladde').classList.remove('active');
+    }
+</script>
+
+
+<script>
+    // Überwacht das Vorhandensein des Table-Containers und entfernt die aktive Klasse vom Suchtyp-Button, wenn der Container nicht vorhanden ist.
+     const button = document.getElementById('searchType');
+
+    function checkContainer() {
+        const exists = !!document.querySelector('.hierarchy-suche-table .table-container');
+        if (!exists) {
+            button.classList.remove('active');
+        }
+    }
+
+    const observer = new MutationObserver(checkContainer);
+    observer.observe(document.body, { childList: true, subtree: true });
+</script>

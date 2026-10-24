@@ -1,0 +1,86 @@
+﻿<div class="wrapper">
+    <form method="post" asp-controller="Login" asp-action="Login" id="loginForm">
+        <div class="login-container">
+            <div class="name">Anmelden</div>
+            <input type="email"
+                   name="email"
+                   placeholder="E-Mail"
+                   value="@ViewBag.Email"
+                   class="@(ViewBag.EmailInvalid == true ? "input-error" : "")" />
+            <input type="password"
+                   name="kennwort"
+                   placeholder="Passwort"
+                   class="@(ViewBag.PasswordInvalid == true ? "input-error" : "")" />
+            <button type="submit" id="loginButton">Login</button>
+            @if (ViewBag.Error != null)
+            {
+                <div class="text-error" id="alertBox">
+                    <i class="fa-solid fa-circle-exclamation icon-error" id="alertIcon"></i>
+                    <span id="errorText">@ViewBag.Error</span>
+                </div>
+            }
+            <div class="small-text">Passwort vergessen?</div>
+        </div>
+    </form>
+</div>
+
+<script>
+
+    // Entfernt die rote Umrandung, wenn der Benutzer mit der Eingabe beginnt.
+    document.querySelectorAll('.login-container input').forEach(function (input) {
+        input.addEventListener('input', function () {
+            input.classList.remove('input-error');
+        });
+    });
+
+    // Live-Countdown für die Kontosperre.
+    var lockoutSeconds = @(ViewBag.LockoutSeconds ?? 0);
+
+    if (lockoutSeconds > 0) {
+        var button = document.getElementById('loginButton');
+        var errorText = document.getElementById('errorText');
+        var baseMessage = "Ihr Konto ist vorübergehend gesperrt. Bitte versuchen Sie es erneut in ";
+
+        button.disabled = true;
+
+        // Funktion, die die verbleibende Zeit in Minuten und Sekunden formatiert.
+        function formatTime(totalSeconds) {
+            var minutes = Math.floor(totalSeconds / 60);
+            var seconds = totalSeconds % 60;
+
+            var minuteText = minutes === 0 ? "" : (minutes === 1 ? "1 Minute" : minutes + " Minuten");
+            var secondText = seconds === 0 ? "" : (seconds === 1 ? "1 Sekunde" : seconds + " Sekunden");
+
+            if (minutes > 0 && seconds > 0) return minuteText + " " + secondText;
+            if (minutes > 0) return minuteText;
+            if (seconds > 0) return secondText;
+            return "sofort";
+        }
+
+        // Funktion, die den Countdown aktualisiert und die Schaltfläche wieder aktiviert, wenn die Sperrzeit abgelaufen ist.
+        function updateCountdown() {
+            if (lockoutSeconds <= 0) {
+                clearInterval(timer);
+                button.disabled = false;
+
+                var alertBox = document.getElementById('alertBox');
+                var alertIcon = document.getElementById('alertIcon');
+
+                // Ändern Sie die Klasse des Alert-Box-Elements, um den Erfolg anzuzeigen.
+                alertBox.classList.remove('text-error');
+                alertBox.classList.add('text-success');
+
+                alertIcon.classList.remove('fa-circle-exclamation', 'icon-error');
+                alertIcon.classList.add('fa-circle-check', 'icon-success');
+
+                errorText.textContent = "Sie können sich jetzt erneut anmelden.";
+                return;
+            }
+            errorText.textContent = baseMessage + formatTime(lockoutSeconds) + ".";
+            lockoutSeconds--;
+        }
+
+        updateCountdown(); // Initialer Aufruf, um sofort die verbleibende Zeit anzuzeigen.
+        var timer = setInterval(updateCountdown, 1000);
+    }
+</script>

@@ -1,0 +1,390 @@
+﻿<div id="pageCont" class="page-container">
+    <!-- Container für den Navigationspfad (blau) -->
+    <div id="pathContainer">
+        <partial name="_TopButtons" />
+        <partial name="_Ansicht" />
+        <div class="bescheid-container">
+            <div class="form-control">
+                <!-- Navigationspfad (UI) -->
+                <div class='currentPath'>
+                    <i class="fas fa-link" style="margin-right:5px;"></i>
+                    <span id="pathContent">/bescheidbearbeitung</span>
+                </div>
+                <!-- Container für die Suche -->
+                <div class="path-search-btn-container">
+                    <div class="path-search-btn-container-inner" style="position: relative;">
+                        <input id="treeSearch"
+                               class="input-suchen"
+                               placeholder="Suchen in Ihrer eAkte..."
+                               autocomplete="off" />
+                        <div id="searchResults" class="search-results-dropdown"></div>
+                    </div>
+
+                    <!-- Umschalter Suchmodus: Bescheidbearbeitung <-> Mitzeichnung -->
+                    <button id="searchModeToggle"
+                            type="button"
+                            class="search-mode-toggle-btn"
+                            title="Suchmodus wechseln (M = Mitzeichnung, B = Bescheidbearbeitung)">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                            <span class="toggle-letter toggle-letter-m">B</span>
+                            <span class="toggle-letter toggle-letter-b">M</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aktionsbuttons (V, U, A, K, D, S, Vorlagenverwaltung) -->
+    <partial name="_Buttons" />
+
+    <!-- Modal für Adressverwaltung -->
+    <div id="adresseModal" class="custom-modal">
+        <div class="modal-content">
+
+            <!-- Modal-Header -->
+            <div class="modal-header" >
+                <div class="modal-header-title">
+                    <i class="fas fa-location-dot"></i>
+                    Adressen
+                </div>
+                <button class="modal-close-btn" id="closeAdresseModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+
+            <!-- Dynamischer Inhalt für Adressen -->
+            <div id="adresseModalContent">
+                <!-- Adresse Partial wird hier geladen -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Container für Vorlagenansicht (Iframe) -->
+    <div id="VorlagenCont" class="vorlagen-container" style="display:none; height:100%;">
+        <iframe id="vorlagenFrame" style="width:100%; height:90%; border:none;"></iframe>
+    </div>
+
+    <!-- Container für Tabellen -->
+    <div id="tableContainer"></div>
+
+    <!-- Container für Akte/Vorgang Bearbeitung -->
+    <div id="modalAkteContainer"></div>
+
+    <!-- Container für Ordner Bearbeitung-->
+    <div id="modalOrdnerContainer"></div>
+
+    <!-- Container für Dokument Bearbeitung-->
+    <div id="modalDokumentContainer"></div>
+
+    <!-- Container für Kategorie, Hauptgruppe, Nebengruppe Bearbeitung-->
+    <div id="modalKaHaNeContainer"></div>
+
+</div>
+
+
+<script>
+
+    const API_BASE = '@Url.Content("~/bescheidbearbeitung")'; 
+
+
+    // Navigiert zu einem Knoten im Baum anhand der ObjectId. (Pfad)
+    function navigateToNode(element) {
+        const objectId = element.dataset.objectid;
+
+        if (!objectId)
+        {
+            return;
+        }
+
+    window.location.href = '@Url.Content("~/bescheidbearbeitung")' + "?ObjectId=" + objectId;
+    }
+</script>
+
+
+<script>
+    const searchInput = document.getElementById("treeSearch");
+    const resultsContainer = document.getElementById("searchResults");
+    const modeToggleBtn = document.getElementById("searchModeToggle");
+    const modeLabel = document.getElementById("searchModeLabel");
+
+    let timeout = null;
+    let currentSearchMode = "Mitzeichnung"; // Default, wird beim Laden überschrieben
+
+    // Zuvor eingegebenen Suchtext wiederherstellen (bleibt nach Navigation erhalten).
+    (function restoreSearchValue() {
+        const savedValue = sessionStorage.getItem("treeSearchValue");
+        if (savedValue) {
+            searchInput.value = savedValue;
+            sessionStorage.removeItem("treeSearchValue");
+        }
+    })();
+
+    // Aktuellen Modus vom Server abrufen.
+    function loadAccessMode() {
+        fetch(`${API_BASE}/get-access-mode`)
+            .then(response => response.json())
+            .then(mode => {
+                currentSearchMode = mode;
+                updateToggleUi();
+            })
+            .catch(error => console.error("Fehler beim Laden des Zugriffsmodus:", error));
+    }
+
+
+    // UI des Umschalters aktualisieren.
+    function updateToggleUi() {
+        const mitzeichnungBadge = document.getElementById("mitzeichnung-badge");
+        const mitzeichnungDevider = document.getElementById("mitzeichnung-devider");
+
+        if (currentSearchMode === "Bescheidbearbeitung") {
+            modeToggleBtn.classList.add("mode-bescheid");
+            modeToggleBtn.classList.remove("mode-mitzeichnung");
+            searchInput.placeholder = "Suchen in Ihrer eAkte...";
+
+            mitzeichnungBadge?.classList.add("d-none");
+            mitzeichnungDevider?.classList.add("d-none");
+        } else {
+            modeToggleBtn.classList.add("mode-mitzeichnung");
+            modeToggleBtn.classList.remove("mode-bescheid");
+            searchInput.placeholder = "Suchen in Ihreren Mitzeichnungen...";
+
+            mitzeichnungBadge?.classList.remove("d-none");
+            mitzeichnungDevider?.classList.remove("d-none");
+        }
+    }
+
+    // Modus umschalten und auf dem Server speichern (Session).
+    function toggleAccessMode() {
+        const newMode = currentSearchMode === "Bescheidbearbeitung" ? "Mitzeichnung" : "Bescheidbearbeitung";
+
+        fetch(`${API_BASE}/set-access-mode?mode=${encodeURIComponent(newMode)}`)
+            .then(response => {
+                if (!response.ok) throw new Error("Fehler beim Setzen des Modus");
+                currentSearchMode = newMode;
+                updateToggleUi();
+
+                const value = searchInput.value.trim();
+                if (value.length >= 2) performSearch(value);
+            })
+            .catch(error => console.error("Fehler beim Wechseln des Zugriffsmodus:", error));
+    }
+
+    modeToggleBtn.addEventListener("click", toggleAccessMode);
+
+    // Funktion zur Durchführung der Suche.
+    function performSearch(name) {
+        fetch(`/bescheidbearbeitung/search?name=${encodeURIComponent(name)}&mode=${encodeURIComponent(currentSearchMode)}`)
+            .then(response => response.json())
+            .then(data => {
+                resultsContainer.innerHTML = "";
+
+                if (data.length === 0) {
+                    resultsContainer.innerHTML = `
+                        <div class="search-result-item" style="display:flex; align-items:center; gap:8px;">
+                         <i class="fa-solid fa-circle-info" style="color: #2563EB"></i> <div class="btn-divider"></div> Keine Ergebnisse gefunden
+                        </div>`;
+                } else {
+                    data.forEach(item => {
+                        const div = document.createElement("div");
+                        div.className = "search-result-item";
+
+                        let iconHtml = '';
+                        if (item.nodeType === 'Dokument') {
+                            iconHtml = '<i class="fa-solid fa-file-lines" style="color:#6481a5"></i>';
+                        } else {
+                            const folderColor = item.colorHex ? item.colorHex : '#2563EB';
+                            iconHtml = `<i class="fa-solid fa-folder" style="color:${folderColor}"></i>`;
+                        }
+
+                        if (item.iconBase64) {
+                            iconHtml = `<img src="data:image/png;base64,${item.iconBase64}" style="width:1em; height:1em; object-fit:contain;">`;
+                        }
+
+                        div.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                ${iconHtml}
+                                <div class="btn-divider"></div>
+                                <span>${escapeHtml(item.name)}</span>
+                                ${item.colorHex && item.nodeType === 'UnterOrdner' ? `<div style="height:5px; width:5px; background:${item.colorHex}; border-radius:2px;"></div>` : ''}
+                            </div>
+                        `;
+
+                        div.addEventListener("click", () => {
+                             window.location.href = appUrl(`bescheidbearbeitung?ObjectId=${item.objectId}`);
+
+                            // Input.
+                            sessionStorage.setItem("treeSearchValue", searchInput.value);
+                            resultsContainer.style.display = "none";
+                        });
+
+                        resultsContainer.appendChild(div);
+
+
+                    });
+                }
+
+                resultsContainer.style.display = "block";
+            })
+            .catch(error => {
+                console.error("Fehler bei der Suche:", error);
+                resultsContainer.innerHTML = `
+                    <div class="search-result-item" style="color: red;">
+                     <i class="fa-solid fa-triangle-exclamation"></i> <div class="btn-divider"></div> Fehler bei der Suche
+                    </div>`;
+                resultsContainer.style.display = "block";
+            });
+    }
+
+    searchInput.addEventListener("input", function () {
+        clearTimeout(timeout);
+        const value = this.value.trim();
+
+        if (value.length < 2) {
+            resultsContainer.style.display = "none";
+            return;
+        }
+
+        timeout = setTimeout(() => {
+            performSearch(value);
+        }, 350);
+    });
+
+    searchInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            const value = this.value.trim();
+            if (value.length >= 2) {
+                clearTimeout(timeout);
+                performSearch(value);
+            }
+        }
+    });
+
+    document.addEventListener("click", function (e) {
+        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target) && !modeToggleBtn.contains(e.target)) {
+            resultsContainer.style.display = "none";
+        }
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+            resultsContainer.style.display = "none";
+        }
+    });
+
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    searchInput.addEventListener("focus", function () {
+        const value = this.value.trim();
+        if (value.length >= 2) {
+            performSearch(value);
+        }
+    });
+
+    // Modus beim Laden der Seite initialisieren.
+    loadAccessMode();
+</script>
+
+
+<script>
+    // Funktion zum Laden der "Meine Vorgänge"-Tabelle.
+    function loadMeineVorgaenge() {
+        fetch("/bescheidbearbeitung/load-meine-vorgaenge?page=1")
+            .then(r => r.text())
+            .then(html => {
+                const container = document.getElementById("tableContainer");
+                container.innerHTML = html;
+
+                // Выполняем скрипты из partial
+                container.querySelectorAll("script").forEach(old => {
+                    const s = document.createElement("script");
+                    s.textContent = old.textContent;
+                    document.body.appendChild(s);
+                    s.remove();
+                });
+            });
+    }
+
+    // Funktion zum Laden der "Meine Dokumente"-Tabelle.
+    function loadMeineDokumente() {
+        fetch("/bescheidbearbeitung/load-meine-dokumente?page=1")
+            .then(r => r.text())
+            .then(html => {
+                const container = document.getElementById("tableContainer");
+                container.innerHTML = html;
+                container.querySelectorAll("script").forEach(old => {
+                    const s = document.createElement("script");
+                    s.textContent = old.textContent;
+                    document.body.appendChild(s);
+                    s.remove();
+                });
+            });
+    }
+
+    // Funktion zum Laden der "Gelöschte Dokumente"-Tabelle.
+    function loadGeloschteDokumente() {
+        fetch("/bescheidbearbeitung/load-dokumente-deleted?page=1")
+            .then(r => r.text())
+            .then(html => {
+                const container = document.getElementById("tableContainer");
+                container.innerHTML = html;
+                container.querySelectorAll("script").forEach(old => {
+                    const s = document.createElement("script");
+                    s.textContent = old.textContent;
+                    document.body.appendChild(s);
+                    s.remove();
+                });
+            });
+    }
+
+    // Funktion zum Laden von "Mein Profil" in den Container.
+    function loadBenutzer() {
+        fetch("/benutzer/benutzer")
+            .then(r => r.text())
+            .then(html => {
+                const container = document.getElementById("tableContainer"); 
+                container.innerHTML = html;
+                container.querySelectorAll("script").forEach(old => {
+                    const s = document.createElement("script");
+                    s.textContent = old.textContent;
+                    document.body.appendChild(s);
+                    s.remove();
+                });
+            });
+    }
+
+    // Funktion zum Laden der Dokumentenübersicht basierend auf der aktuellen ObjectId und nodeType im History-State.
+    function openDokumentenubersicht() {
+        const state = history.state || {};
+        const objectId = state.objectId;
+        const nodeType = state.nodeType;
+
+        document.getElementById('Dokumentenubersicht').style.display = "none";
+
+        if (!objectId) {
+            console.warn("Keine objectId im History-State gefunden — kann Dokumentenübersicht nicht laden.");
+            return;
+        }
+
+        fetch(`/bescheidbearbeitung/load-dokumentenuebersicht?objectId=${objectId}&nodeType=${encodeURIComponent(nodeType ?? "")}&page=1`)
+            .then(r => r.text())
+            .then(html => {
+                const container = document.getElementById("tableContainer");
+                container.innerHTML = html;
+                container.querySelectorAll("script").forEach(old => {
+                    const s = document.createElement("script");
+                    s.textContent = old.textContent;
+                    document.body.appendChild(s);
+                    s.remove();
+                });
+            });
+    }
+</script>
+

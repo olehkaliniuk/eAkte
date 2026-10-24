@@ -1,0 +1,117 @@
+﻿@model EAktePrototypProjektNewMvc.Models.Vorgange.VorgangViewModel
+
+
+<tr data-sort-header="Vorgang"
+    data-sort-column="@Model.SortColumn"
+    data-sort-direction="@Model.SortDirection"
+    style="display:none;">
+</tr>
+
+@if (Model.Vorgang != null && Model.Vorgang.Count > 0)
+{
+    foreach (var v in Model.Vorgang)
+    {
+        <tr class="js-table-node no-select" data-object-id="@v.ObjektId" data-node-type="Vorgang">
+            <td>Vorgang</td>
+            <td>@v.Aktenzeichen</td>
+            <td>@v.Zulassungsnummer</td>
+            <td>@v.UserID</td>
+            <td>@v.Abteilung</td>
+            <td>@v.Stelle</td>
+            <td>@v.Status</td>
+            <td>@v.Gegenstand</td>
+            <td>@v.Betreff</td>
+            <td>@v.Bemerkung</td>
+            <td>@v.ErzeugtAm</td>
+            <td>@v.ObjektId</td>
+            <td>
+                <i class="fa-solid fa-circle-info btn-info-table" onclick="toggleInfo('@v.ObjektId', event)" title="Info zu @v.Aktenzeichen"></i>
+                <i class="fa-solid fa-circle-chevron-right btn-info-table weiter-btn" title="Klicken um das Element im Baum anzuzeigen." style="margin-left:5px" ></i>
+            </td>
+        </tr>
+
+        <!-- Info -->
+        <tr id="info-@v.ObjektId" class="info-row" style="display:none;">
+            <td colspan="13">
+
+                <div class="info-content">
+
+                    <div class="info-item">
+                        <span class="info-label">Objekt-Typ:</span>
+                        <span class="info-value">Vorgang</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Objekt-Id:</span>
+                        <span class="info-value">
+                            <a href="@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@v.ObjektId">
+                                @Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@v.ObjektId
+                            </a>
+                        </span>
+                    </div>
+
+                </div>
+
+            </td>
+        </tr>
+    }
+}
+else
+{
+    <tr><td colspan="13" style="text-align:center;">Keine Einträge gefunden</td></tr>
+}
+
+
+<div class="pagination-container">
+    <div class="pagination-buttons">
+        @{
+            bool isEmpty = Model.TotalPagesSearch == 0;
+        }
+        <button class="p-btn" onclick="loadPageS(1)"
+                @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-left"></i>
+        </button>
+        <button class="p-btn" onclick="loadPageS(@(Model.CurrentPage - 1))"
+                @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-left"></i>
+        </button>
+        <div class="pagination-page-info">
+            <input id="currentPage" type="number" min="1"
+                   max="@Model.TotalPagesSearch" value="@Model.CurrentPage"
+                   @(isEmpty ? "disabled" : "") />
+            <span class="pagination-sep">von</span>
+            <span class="pagination-total">@Model.TotalPagesSearch</span>
+        </div>
+        <button class="p-btn" onclick="loadPageS(@(Model.CurrentPage + 1))"
+                @(Model.CurrentPage >= Model.TotalPagesSearch || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-right"></i>
+        </button>
+        <button class="p-btn" onclick="loadPageS(@Model.TotalPagesSearch)"
+                @(Model.CurrentPage >= Model.TotalPagesSearch || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-right"></i>
+        </button>
+    </div>
+
+    <!-- Einträge pro Seite -->
+    <div class="page-size">
+        <label class="pagination-label">Einträge pro Seite</label>
+        <select id="pageSizeSelect" class="pagination-select"
+                onchange="searchModule.loadSearch(1)">
+            @foreach (var size in new[] { 1, 5, 10, 25, 50, 100 })
+            {
+                var selected = Model.PageSize == size ? "selected" : "";
+                @:<option value="@size" @selected>@size</option>
+            }
+        </select>
+    </div>
+
+    <!-- Gesamtanzahl + Actions -->
+    <div class="actions2">
+        <span class="pagination-label">Gesamt</span>
+        <input class="pagination-count-input" value="@Model.LimitedCount" readonly />
+        <button class="p-btn" title="Aktualisieren"
+                onclick="document.getElementById('pageSizeSelect').value = 10; searchModule.loadSearch(1);">
+            <i class="fa fa-sync"></i>
+        </button>
+    </div>
+</div>

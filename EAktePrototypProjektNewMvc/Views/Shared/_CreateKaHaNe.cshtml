@@ -1,0 +1,246 @@
+﻿@model EAktePrototypProjektNewMvc.Models.KaHaNe.CreateKaHaNeViewModel
+
+@{
+    bool isEdit = Model.Mode?.Trim().ToLower() == "edit";
+    string objectType = Model.ObjectType?.Trim().ToLower() ?? "";
+
+    string typeLabel = objectType switch
+    {
+        "kategorie" => "Kategorie",
+        "hauptgruppe" => "Hauptgruppe",
+        "nebengruppe" => "Nebengruppe",
+        _ => "Eintrag"
+    };
+
+    string currentBezeichnung = objectType switch
+    {
+        "kategorie" => Model.Kategorie?.Bezeichnung ?? "",
+        "hauptgruppe" => Model.Hauptgruppe?.Bezeichnung ?? "",
+        "nebengruppe" => Model.Nebengruppe?.Bezeichnung ?? "",
+        _ => ""
+    };
+
+    string currentKuerzel = objectType switch
+    {
+        "kategorie" => Model.Kategorie?.Kuerzel ?? "",
+        "hauptgruppe" => Model.Hauptgruppe?.Kuerzel ?? "",
+        "nebengruppe" => Model.Nebengruppe?.Kuerzel ?? "",
+        _ => ""
+    };
+
+    string currentBeschreibung = objectType switch
+    {
+        "kategorie" => Model.Kategorie?.Beschreibung ?? "",
+        "hauptgruppe" => Model.Hauptgruppe?.Beschreibung ?? "",
+        "nebengruppe" => Model.Nebengruppe?.Beschreibung ?? "",
+        _ => ""
+    };
+
+}
+
+<div id="fileModalKaHaNe" class="file-modal" style="display:none;">
+    <input hidden id="modalObjectType" value="@Model.ObjectType" />
+    <input hidden id="modalMode" value="@Model.Mode" />
+    <input hidden id="modalObjectId" value="@Model.ObjectId" />
+    <input hidden id="modalParentObjectId" value="@Model.ParentObjectId" />
+
+    <div class="modal-header" id="modalHeader">
+        <div class="modal-header-title">
+            <i class="fa-solid fa-display"></i>
+            [eAkte] @(isEdit ? "Bearbeiten" : "Erstellen") einer @typeLabel
+        </div>
+        <button class="modal-close-btn" onclick="closeModalKaHaNe()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    @{
+        byte[]? currentIcon = objectType switch
+        {
+            "kategorie" => Model.Kategorie?.Icon,
+            "hauptgruppe" => Model.Hauptgruppe?.Icon,
+            "nebengruppe" => Model.Nebengruppe?.Icon,
+            _ => null
+        };
+
+        string? currentIconBase64 = currentIcon != null ? Convert.ToBase64String(currentIcon) : null;
+        string? parentIconBase64 = Model.ParentIcon != null ? Convert.ToBase64String(Model.ParentIcon) : null;
+    }
+
+    <div class="action-header">
+        <h2>@(isEdit ? "Bearbeiten" : "Erstellen") einer @typeLabel</h2>
+        <div class="action-header-meta">
+            @if (isEdit)
+            {
+                <span class="meta-chip">
+                    @if (currentIconBase64 != null)
+                    {
+                        <img src="data:image/png;base64,@currentIconBase64" class="meta-chip-icon" style="width:1em;" alt="Icon" />
+                    }
+                    else
+                    {
+                        <i class="fa-solid fa-folder"></i>
+                    }
+                    Objekt: <strong id="headerObjectId">@currentBezeichnung</strong>
+                </span>
+            }
+            else if (objectType != "kategorie")
+            {
+                <span class="meta-chip">
+                    @if (parentIconBase64 != null)
+                    {
+                        <img src="data:image/png;base64,@parentIconBase64" class="meta-chip-icon" style="width:1em;" alt="Icon" />
+                    }
+                    else
+                    {
+                        <i class="fa-solid fa-folder"></i>
+                    }
+                    Übergeordnet: <strong id="headerParent">@(Model.ParentBezeichnung ?? "—")</strong>
+                </span>
+            }
+        </div>
+    </div>
+
+    <div class="modal-body">
+        <div id="tab-process" class="tab-panel active">
+            <div class="create-akte-btn-container">
+                <div class="status-box" id="nameErrorBox">
+                    <i class="fa-solid fa-circle-exclamation icon-error" id="nameErrorIcon" style="margin-top: 3px"></i>
+                    <span id="nameErrorText"></span>
+                </div>
+                @if (!isEdit)
+                {
+                    <button class="akte-btn akte-btn-secondary" onclick="saveKaHaNe()">
+                        <i class="fa-solid fa-arrow-right"></i> Erstellen
+                    </button>
+                }
+                else
+                {
+                    <button class="akte-btn akte-btn-secondary" onclick="saveKaHaNe()">
+                        <i class="fa-solid fa-floppy-disk"></i> Speichern
+                    </button>
+                }
+            </div>
+            <p class="section-label">@typeLabel-Informationen</p>
+            <div class="field-group">
+                <div class="field-wrapper">
+                    <label class="field-label">
+                        Bezeichnung <span class="req-star">*</span>
+                    </label>
+                    <input class="modal-input req-tab1"
+                           id="inputBezeichnung"
+                           value="@currentBezeichnung"
+                           oninput="handleNameInput()" />
+                </div>
+                <div class="field-wrapper">
+                    <label class="field-label">
+                        Kürzel
+                    </label>
+                    <input class="modal-input req-tab1"
+                           id="inputKuerzel"
+                           value="@currentKuerzel"
+                           oninput="validateTabKahane()" />
+                </div>
+                <div class="field-wrapper">
+                    <label class="field-label">
+                        Beschreibung
+                    </label>
+                    <input class="modal-input req-tab1"
+                           id="inputBeschreibung"
+                           value="@currentBeschreibung"
+                           oninput="validateTabKahane()" />
+                </div>
+
+
+                <div class="field-wrapper">
+                    <label class="field-label">Icon</label>
+
+                    <div class="icon-upload-container">
+                        <div class="icon-preview" id="iconPreviewWrapper">
+                            @if (currentIconBase64 != null)
+                            {
+                                <img id="iconPreviewImg" src="data:image/png;base64,@currentIconBase64" style="width:1rem" alt="Icon Vorschau" />
+                            }
+                            else
+                            {
+                                <img id="iconPreviewImg" src="" alt="Icon Vorschau" style="display:none; width:1rem" />
+                                <i class="fa-solid fa-image icon-placeholder" id="iconPlaceholder"></i>
+                            }
+                        </div>
+
+                        <div class="icon-upload-actions">
+                            <label class="akte-btn akte-btn-secondary icon-upload-label">
+                                <i class="fa-solid fa-upload"></i> Icon hochladen
+                                <input type="file" id="inputIcon" accept="image/*" style="display:none;" onchange="handleIconUpload(event)" />
+                            </label>
+
+                            <button type="button" class="akte-btn akte-btn-danger" id="btnRemoveIcon" onclick="removeIcon()"
+                                    style="@(currentIconBase64 != null ? "" : "display:none;")">
+                                <i class="fa-solid fa-trash"></i> Entfernen
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- iconAction: "keep" (nichts ändern) | "new" (neues Icon in inputIconBase64) | "remove" (Icon löschen) -->
+                    <input hidden id="inputIconAction" value="keep" />
+                    <input hidden id="inputIconBase64" value="" />
+                </div>
+
+                @if (objectType == "kategorie")
+                {
+                    <div class="field-wrapper">
+                        
+                        <label class="field-label">Abteilungen</label>
+                        <div class="ab-ref-scroll-box">
+                            <ul>
+                                @foreach (var abteilung in Model.Abteilungen)
+                                {
+                                    bool isChecked = Model.SelectedAbteilungen != null && Model.SelectedAbteilungen.Contains(abteilung);
+
+                                    <li class="list-abt-ref">
+                                        <div class="list-abt-ref-name">@abteilung</div>
+                                        <input type="checkbox" name="Abteilungen" value="@abteilung" checked="@isChecked" />
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                @if (objectType == "hauptgruppe")
+                {
+                    <div class="field-wrapper"> 
+                        <label class="field-label">Abteilungen / Referate</label>
+                        <div class="ab-ref-scroll-box">
+                            @if(Model.Abteilungen != null && Model.Abteilungen.Any())
+                            {
+                                @foreach (var abteilungName in Model.Abteilungen)
+                                {
+                                    <div class="abt-group-header">@abteilungName</div>
+
+                                    <ul>
+                                        @foreach (var referat in Model.Referate.Where(r => r.AbteilungName == abteilungName))
+                                        {
+                                            bool isChecked = Model.SelectedAbteilungReferate != null
+                                            && Model.SelectedAbteilungReferate.Any(sr =>
+                                            sr.Abteilung == abteilungName && sr.Referat == referat.Name);
+
+                                            <li class="list-abt-ref">
+                                                <div class="list-abt-ref-name">@referat.Name</div>
+                                                <input type="checkbox" name="Referate" value="@referat.Id" checked="@isChecked" />
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            }
+                            else
+                            {
+                                <p class="field-label">Bitte zuerst eine Abteilung (übergeordnete Kategorie) auswählen, bevor ein Referat für die Hauptgruppe ausgewählt werden kann.</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

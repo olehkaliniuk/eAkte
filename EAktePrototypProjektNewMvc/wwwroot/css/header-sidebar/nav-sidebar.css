@@ -1,0 +1,290 @@
+﻿/* ============================================================
+   NAV / SIDEBAR — SEITENLEISTE MIT VARIABLEM BREITE.
+   ============================================================ */
+.nav-container {
+    position: relative;
+    padding: 10px;
+    /* height: calc(100vh - var(--header-height)); */
+    min-width: 10%;
+    max-width: 30%;
+    background-color: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    border-radius: 9px;
+}
+    /* Größenänderungs-Griff am rechten Rand. */
+    .resizer {
+    width: 4px;
+    cursor: ew-resize; /* Horizontaler Resize-Cursor. */
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background: transparent;
+    transition: background 0.2s;
+}
+
+    /* Griff wird beim Hover sichtbar. */
+    .resizer:hover {
+        background: var(--color-accent);
+        opacity: 0.25;
+    }
+
+/* Hauptinhaltsbereich rechts der Sidebar. */
+.content {
+    margin-left: 10%;
+    padding: 20px;
+    background-color: var(--color-bg);
+}
+
+/* Navigationsabschnitt als Flex-Spalte. */
+.nav-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.theme-btn {
+    background-color: var(--color-bg-second);
+    border: none;
+    box-shadow: none;
+}
+
+    .theme-btn:hover {
+        background-color: var(--color-bg-second);
+        color: var(--color-accent-hover);
+    }
+
+/* Pfeil-Navigation am unteren Rand der Sidebar. */
+.arrows {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto; /* An den unteren Rand drücken. */
+    display: flex;
+    gap: 8px;
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   NAV TREE — HIERARCHISCHE BAUMSTRUKTUR MIT VERBINDUNGSLINIEN.
+   ============================================================ */
+
+/* Basis-Link-Stil innerhalb des Baums. */
+.nav-tree li a {
+    text-decoration: none;
+    color: var(--color-text);
+    font-size: 0.8125rem;
+}
+
+    .nav-tree li a:hover {
+        color: var(--color-text-hoover);
+    }
+
+/* Alle Listenebenen ohne Einzug und Markierungen. */
+.nav-tree, .nav-tree ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+
+    /* Jedes Listenelement relativ positioniert für Pseudo-Elemente. */
+    .nav-tree li {
+        position: relative;
+    }
+
+    /* Abstand zwischen den ersten vier Elementen. */
+    .nav-tree > li:nth-child(-n+4) {
+        margin-bottom: 4px;
+    }
+
+/* Flex-Zeile für jeden Baumeintrag. */
+.tree-item {
+    min-height: 1.8em;
+    display: flex;
+    align-items: center;
+}
+
+/* Unterebenen relativ positioniert für Linien. */
+.nav-tree ul {
+    position: relative;
+}
+
+/* Aktives Element fett und in Auswahlfarbe. */
+.nav-tree li.active > .tree-item > a {
+    font-weight: 600;
+    color: var(--color-text-select);
+}
+
+/* Abstände für Icons und Bilder vor Einträgen. */
+.nav-tree li i {
+    margin-right: 6px;
+}
+
+.nav-tree li img {
+    margin-right: 6px;
+}
+
+/* Ausgewählter Eintrag in Akzentfarbe. */
+.tree-selected {
+    color: var(--color-accent) !important;
+}
+
+/* ---- Verbindungslinien im Baum ---- */
+
+/* Unterebenen einrücken. */
+.nav-tree ul {
+    margin-left: 1.2em;
+}
+
+/* Vertikale Linie links von jedem Listenelement. */
+.nav-tree li::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -0.8em;
+    width: 1px;
+    height: 100%;
+    background: var(--color-nav-lines);
+}
+
+/* Letztes Element bekommt kürzere vertikale Linie. */
+.nav-tree li:last-child::before {
+    height: 0.9em;
+}
+
+/* Horizontale Verbindungslinie für jeden Abschnittseintrag. */
+.nav-section li::after {
+    content: "";
+    position: absolute;
+    top: 0.9em;
+    left: -0.8em;
+    width: 0.5em;
+    height: 1px;
+    background: var(--color-nav-lines);
+}
+
+/* ---- Ordner-Knoten auf- und zuklappen ---- */
+.tree-node > .tree-children {
+    display: none !important;
+}
+/* Standardmäßig geschlossen. */
+.tree-node.open > .tree-children {
+    display: block !important;
+}
+/* Geöffneter Zustand. */
+.tree-node.active > .js-tree-node {
+    font-weight: 600;
+}
+/* Aktiver Knoten fett. */
+
+/* ---- Icon-Stapel für Ordner mit Plus-Symbol ---- */
+.icon-stack {
+    position: relative;
+    display: inline-block;
+}
+
+/* Haupt-Ordnericon absolut positioniert. */
+.folder-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Kleines Plus-Symbol oben links über dem Icon. */
+.plus-overlay {
+    position: absolute;
+    top: -0.5em;
+    left: -0.6em;
+    font-size: 0.6rem;
+    color: var(--color-accent);
+    pointer-events: none; /* Klicks durchlassen. */
+}
+
+
+
+/* errors */
+/* Tree error */
+.text-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 14px;
+    background-color: var(--color-red-bg);
+    border: 1px solid var(--color-red-border);
+    border-radius: var(--radius-md);
+    color: var(--color-red-text);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.icon-error {
+    color: var(--color-red-icon) !important;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+/* Success */
+.text-success {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 14px;
+    background-color: var(--color-green-bg);
+    border: 1px solid var(--color-green-border);
+    border-radius: var(--radius-md);
+    color: var(--color-green-text);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.icon-success {
+    color: var(--color-green-icon) !important;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+
+
+/* Erfolgsmeldung */
+.status-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+    .status-box.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .status-box.text-error-modal {
+        background-color: var(--color-red-bg);
+        border: 1px solid var(--color-red-border);
+        color: var(--color-red-text);
+    }
+
+    .status-box.text-success-modal {
+        background-color: var(--color-green-bg);
+        border: 1px solid var(--color-green-border);
+        color: var(--color-green-text);
+    }
+
+
+.toggle-icon i,
+.toggle-icon img {
+    cursor: pointer;
+    user-select: none;
+}
+
+

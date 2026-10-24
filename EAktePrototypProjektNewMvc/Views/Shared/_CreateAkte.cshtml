@@ -1,0 +1,710 @@
+﻿@model EAktePrototypProjektNewMvc.Models.Persone.Personen
+@using EAktePrototypProjektNewMvc.Models.CreateAkte
+@using EAktePrototypProjektNewMvc.Models.CreateAkte.Ablaufdaten
+@using EAktePrototypProjektNewMvc.Models.CreateAkte.Kontakte
+@using EAktePrototypProjektNewMvc.Models.Gebuehre
+
+
+<div id="fileModal" class="file-modal" style="display:none;">
+
+    <!-- LfdNmr -->
+    <input hidden id="lfdNr" value="@ViewBag.MaxLfdNr" />
+    <!-- UId -->
+    <input hidden id="uId" value="@ViewBag.UserId" />
+    <!-- ZulassungsnummerReady -->
+    <input hidden id="modalZulassungsnummerAkte" value="@ViewBag.Zulassung" />
+    <!-- Modus -->
+    <input hidden id="modalMode" value="@ViewBag.Mode" />
+    <!-- Aktenzeichen -->
+    <input hidden id="modalAktenzeichen" value="@ViewBag.Aktenzeichen" />
+    <!-- Aktueller Benutzer (Bearbeiten) -->
+    <input hidden id="modalCurrentUser" value="@(Model?.Name) @(Model?.Vorname)" />
+    <!-- Hauptgruppe -->
+    <input hidden id="inputSVA" value="@(ViewBag.HauptgruppeNummer?.ToString() ?? "")" />
+    <!-- Nebengruppe -->
+    <input hidden id="inputSachgebiet" value="@(ViewBag.NebengruppeNummer?.ToString() ?? "")" />
+
+
+
+    <div class="modal-header" id="modalHeader">
+        <div class="modal-header-title">
+            <i class="fa-solid fa-display"></i>
+            [eAkte] @(((string)ViewBag.Mode)?.Trim().ToLower() == "edit" ? "Bearbeiten" : "Erstellen") eines neuen Nat Vorgangs
+        </div>
+        <button class="modal-close-btn" onclick="closeModal()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+
+    <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+
+
+    <div class="action-header">
+        <h2>@(((string)ViewBag.Mode)?.Trim().ToLower() == "edit" ? "Bearbeiten" : "Erstellen") eines Vorgangs (eAkte)</h2>
+        <div class="action-header-meta">
+            <span class="meta-chip">
+                <i class="fa-solid fa-layer-group"></i>
+                Hauptgruppe: <strong id="headerSva">@(ViewBag.NebengruppeNummer?.ToString() ?? ""), @(ViewBag.NebengruppeBezeichnung ?? "")</strong>
+            </span>
+            <span class="meta-chip">
+                <i class="fa-solid fa-folder-open"></i>
+                Nebengruppe: <strong id="headerSachgebiet">@(ViewBag.NebengruppeNummer?.ToString() ?? ""), @(ViewBag.NebengruppeBezeichnung ?? "")</strong>
+            </span>
+            <span class="meta-chip">
+                <i class="fa-solid fa-id-badge"></i>
+                Zulassungsnummer: <strong id="headerZulassung">@ViewBag.Zulassung</strong>
+            </span>
+            <span class="meta-chip">
+                <i class="fa-solid fa-id-badge"></i>
+                Aktenzeichen: <strong id="headerAktenzeichen">@ViewBag.Aktenzeichen</strong>
+            </span>
+        </div>
+    </div>
+
+
+    <div class="modal-tabs">
+        <button class="modal-tab-btn active"
+                id="tab-btn-process"
+                onclick="switchTab('process', this)">
+            <i class="fa-solid fa-file-lines"></i> Vorgangsdaten
+        </button>
+        <button class="modal-tab-btn"
+                id="tab-btn-applicant"
+                onclick="switchTab('applicant', this)">
+            <i class="fa-solid fa-user"></i> Antragsteller
+        </button>
+        <button class="modal-tab-btn"
+                id="tab-btn-contacts"
+                onclick="switchTab('contacts', this)">
+            <i class="fa-solid fa-address-book"></i> Kontakte
+        </button>
+        @if (ViewBag.Mode == "edit")
+        {
+            <button class="modal-tab-btn"
+                    id="tab-btn-ablaufdaten"
+                    onclick="switchTab('ablaufdaten', this)">
+                <i class="fa-solid fa-address-book"></i> Ablaufdaten
+            </button>
+        }
+
+        <button class="modal-tab-btn"
+                id="modal-tab-gebuehren"
+                onclick="switchTab('gebuehren', this)">
+            <i class="fa-solid fa-money-bill-wave"></i> Gebühren
+        </button>
+    </div>
+
+    <div class="modal-body">
+
+
+        <div id="tab-process" class="tab-panel active">
+
+            <div class="create-akte-btn-container">
+                <div class="status-box" id="badge-tab1">
+                    <i class="fa-solid fa-circle-check icon-success" id="badge-tab1-icon"></i>
+                    <span id="badge-tab1-text">Alle Pflichtfelder ausgefüllt</span>
+                </div>
+
+                @if (ViewBag.Mode == "create")
+                {
+                    <button class="akte-btn akte-btn-secondary" id="btnWeiter1" onclick="goToApplicant()" disabled>
+                        <i class="fa-solid fa-arrow-right"></i> Weiter
+                    </button>
+                }
+                else if (ViewBag.Mode == "edit")
+                {
+                    <button class="akte-btn akte-btn-secondary"
+                            id="btnSaveVorgang"
+                            data-zulassung="@ViewBag.Zulassung"
+                            data-aktenzeichen="@ViewBag.Aktenzeichen"
+                            onclick="updateVorgang(this.dataset.zulassung.trim(), this.dataset.aktenzeichen.trim())"
+                            disabled>
+                        <i class="fa-solid fa-floppy-disk"></i> Vorgangsdaten speichern
+                    </button>
+                }
+            </div>
+
+            <!-- NEU: Zwei-Spalten-Layout -->
+            <div class="tab1-layout">
+
+                <!-- LINKS: alle bisherigen Felder -->
+                <div class="tab1-fields">
+
+                    <!-- Reihe 1: Name + Ansprechpartner -->
+                    <div style="display:flex; gap:14px; margin-bottom:14px;">
+                        <div class="field-wrapper" style="max-width:50%; flex:1;">
+                            <label class="field-label">Name</label>
+                            <input class="modal-input req-tab1"
+                                   id="inputName"
+                                   value="@(ViewBag.Mode == "edit" ? ViewBag.Name : $"{Model?.Name} {Model?.Vorname}")"
+                                   oninput="validateTab1()" readonly />
+                        </div>
+
+                        <div class="field-wrapper" style="max-width:50%; flex:1;">
+                            <label class="field-label">Ansprechpartner</label>
+                            @if (ViewBag.Mode == "edit")
+                            {
+                                <input class="modal-input" id="inputAnsprechpartner" name="Ansprechpartner"
+                                       value="@ViewBag.Ansprechpartner" oninput="validateTab1()" />
+                            }
+                            else
+                            {
+                                <select class="modal-input" id="selectAnsprechpartner" name="Ansprechpartner" onchange="validateTab1()">
+                                    <option value=""></option>
+                                    @foreach (var p in ViewBag.AnsprechpartnerListe)
+                                    {
+                                        <option value="@p.Name @p.Vorname">@p.Name @p.Vorname &nbsp;·&nbsp; @p.Abteilung / @p.Referat</option>
+                                    }
+                                </select>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Reihe 2: Abteilung + Referat/Stelle -->
+                    <div class="field-group">
+                        @if (ViewBag.Mode == "edit")
+                        {
+                            <div class="field-wrapper">
+                                <label class="field-label">Abteilung</label>
+                                <input class="modal-input" id="inputAbteilung" value="@ViewBag.Abteilung" readonly />
+                            </div>
+
+                            <div class="field-wrapper">
+                                <label class="field-label">Referat, Stelle</label>
+                                <span class="stelle-combo-wrapper">
+                                    <input class="modal-input" id="inputReferat" value="@ViewBag.Referat" readonly />
+                                    <input type="text" id="inputStelleNummer" class="stelle-combo-input"
+                                           value="@ViewBag.Stelle" oninput="validateTab1()" readonly />
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="field-wrapper">
+                                <label class="field-label">Abteilung</label>
+                                <select class="modal-input req-tab1" id="inputAbteilung" onchange="onAbteilungChanged()">
+                                    @if (ViewBag.Abteilung != null)
+                                    {
+                                        foreach (var abteilung in ViewBag.Abteilung as List<string>)
+                                        {
+                                            <option value="@abteilung" selected="@(Model?.Abteilung == abteilung)">@abteilung</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="field-wrapper">
+                                <label class="field-label">Referat, Stelle</label>
+                                <span class="stelle-combo-wrapper req-tab1">
+                                    <select id="inputReferat" class="stelle-combo-select" onchange="validateTab1()"
+                                            style="flex:1 1 50%; min-width:0; box-sizing:border-box;"></select>
+                                    <input type="text" id="inputStelleNummer" class="stelle-combo-input"
+                                           value="@Model?.Stelle?.Trim()" oninput="validateTab1()" readonly
+                                           style="flex:1 1 50%; min-width:0; box-sizing:border-box;" />
+                                </span>
+                            </div>
+                        }
+                    </div>
+
+                    <hr class="divider">
+
+                    <!-- Reihe 3: Antrag/Bescheid (Radio) -->
+                    <div class="field-wrapper">
+                        <label class="field-label">Antrag <span class="req-star">*</span></label>
+                        <div class="radio-group req-tab1" data-radio-group="vorgang_antrag">
+                            <label class="radio-label">
+                                <input type="radio" name="vorgang_antrag" value="mit_antrag" onchange="validateTab1()"
+                                       checked="@(ViewBag.Mode == "edit" && ViewBag.VorgangDaten?.AntragVorhanden == true ? "checked" : null)">
+                                Dem Vorgang liegt ein Antrag zugrunde.
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="vorgang_antrag" value="ohne_antrag" onchange="validateTab1()"
+                                       checked="@(ViewBag.Mode == "edit" && ViewBag.VorgangDaten?.AntragVorhanden == false ? "checked" : null)">
+                                Dem Vorgang liegt kein Antrag zugrunde.
+                            </label>
+                        </div>
+
+                        <hr class="divider">
+
+                        <label class="field-label">Bescheid <span class="req-star">*</span></label>
+                        <div class="radio-group req-tab1" data-radio-group="vorgang_bescheid">
+                            <label class="radio-label">
+                                <input type="radio" name="vorgang_bescheid" value="bescheid" onchange="validateTab1()"
+                                       checked="@(ViewBag.Mode == "edit" && ViewBag.VorgangDaten?.BescheidNeufassung == false ? "checked" : null)">
+                                Bescheid gemäß Antragsart.
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="vorgang_bescheid" value="neufassung" onchange="validateTab1()"
+                                       checked="@(ViewBag.Mode == "edit" && ViewBag.VorgangDaten?.BescheidNeufassung == true ? "checked" : null)">
+                                Neufassung Zulassungsbescheid
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="field-wrapper" style="margin-bottom:14px;">
+                        <label class="field-label">Antragsdatum <span class="req-star">*</span></label>
+                        <input type="date" class="modal-input" id="inputAntragsdatum"
+                               oninput="validateTab1()" style="max-width:200px;"
+                               value="@(ViewBag.Mode == "edit" ? ViewBag.VorgangDaten?.ErzeugtAm?.ToString("yyyy-MM-dd") ?? "" : "")" />
+                    </div>
+
+                    <hr class="divider">
+
+                    <div style="margin-bottom: 14px;">
+                        <div class="field-wrapper">
+                            <label class="field-label">Vorgangstyp <span class="req-star">*</span></label>
+                            <select class="modal-select req-tab1" id="selectVorgangstyp" onchange="validateTab1()">
+                                <option value="">— bitte wählen —</option>
+                                @foreach (var v in (List<Vorgangstyp>)ViewBag.Vorgangstypen)
+                                {
+                                    var isSelected = ViewBag.Mode == "edit" && ViewBag.VorgangDaten?.Bescheidtyp == v.Id.ToString();
+                                    <option value="@v.Id" selected="@isSelected">@v.Type</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <div class="field-wrapper">
+                            <label class="field-label">Antragsart <span class="req-star">*</span></label>
+                            <select class="modal-select req-tab1" id="selectAntragsart" onchange="validateTab1()">
+                                <option value="">— bitte wählen —</option>
+                                @foreach (var a in (List<Antragsart>)ViewBag.Antragsarten)
+                                {
+                                    var isSelected = ViewBag.Mode == "edit" && ViewBag.VorgangDaten?.Antragsart == a.Id.ToString();
+                                    <option value="@a.Id" selected="@isSelected">@a.Bezeichnung</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group cols-1">
+                        <div class="field-wrapper">
+                            <label class="field-label">Gegenstand <span class="req-star">*</span></label>
+                            <textarea class="modal-textarea req-tab1" id="inputGegenstand"
+                                      placeholder="Gegenstand eingeben …" oninput="validateTab1()">@(ViewBag.Mode == "edit" ? (string)(ViewBag.VorgangDaten?.Gegenstand ?? "") : "")</textarea>
+                        </div>
+
+                        <div class="field-wrapper">
+                            <label class="field-label">Betreff <span class="req-star">*</span></label>
+                            <textarea class="modal-textarea req-tab1" id="inputBetreff"
+                                      placeholder="Betreff eingeben …" oninput="validateTab1()">@(ViewBag.Mode == "edit" ? (string)(ViewBag.VorgangDaten?.Betreff ?? "") : "")</textarea>
+                        </div>
+
+                        <div class="field-wrapper">
+                            <label class="field-label">Bemerkung</label>
+                            <textarea class="modal-textarea" id="inputBemerkung"
+                                      placeholder="Bemerkung eingeben …" oninput="validateTab1()">@(ViewBag.Mode == "edit" ? (string)(ViewBag.VorgangDaten?.Bemerkung ?? "") : "")</textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RECHTS: Status-Tabelle, 100% der Höhe der linken Spalte -->
+                <div class="tab1-status-table">
+                    <table class="status-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Datum</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ── Aktuelle offene Aktion (hervorgehoben) ── -->
+                            <tr class="status-section-header">
+                                <td colspan="2">
+                                    <i class="fa-solid fa-circle-exclamation"></i> Aktuelle offene Aktion
+                                </td>
+                            </tr>
+                            <tr class="status-highlight">
+                                <td>Letzte offene Aktion</td>
+                                <td>@ViewBag.StatusUebersicht?.AktionTitelNextId</td>
+                            </tr>
+                            <tr class="status-highlight">
+                                <td>Hinweis</td>
+                                <td>@ViewBag.StatusUebersicht?.AktionHinweis</td>
+                            </tr>
+                            <tr class="status-highlight">
+                                <td>Nachricht</td>
+                                <td>@ViewBag.StatusUebersicht?.AktionNachricht</td>
+                            </tr>
+                            <tr class="status-highlight status-highlight-last">
+                                <td>An</td>
+                                <td>@ViewBag.StatusUebersicht?.An</td>
+                            </tr>
+
+                            <!-- ── Verlauf / reguläre Statusfelder ── -->
+                            <tr class="status-section-header">
+                                <td colspan="2">
+                                    <i class="fa-solid fa-list-check"></i> Verlauf
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Antragsbestätigung</td>
+                                <td>@ViewBag.StatusUebersicht?.Antragsbestaetigung?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>SVA-Ergebnis</td>
+                                <td>@ViewBag.StatusUebersicht?.SvaErgebnis?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Zwischeninformation</td>
+                                <td>@ViewBag.StatusUebersicht?.Zwischeninformation?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Unterlagen vollständig</td>
+                                <td>@ViewBag.StatusUebersicht?.UnterlagenVollstaendig?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Anlagen vollständig</td>
+                                <td>@ViewBag.StatusUebersicht?.AnlagenVollstaendig?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>i.O. Bearbeiter</td>
+                                <td>@ViewBag.StatusUebersicht?.IOBearbeiter?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Zur Unterschrift</td>
+                                <td>@ViewBag.StatusUebersicht?.ZurUnterschrift?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Schlusszeichnung</td>
+                                <td>@ViewBag.StatusUebersicht?.Schlusszeichnung?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Reinschrift</td>
+                                <td>@ViewBag.StatusUebersicht?.Reinschrift?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>zum Versand</td>
+                                <td>@ViewBag.StatusUebersicht?.ZumVersand?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Bescheid an AS</td>
+                                <td>@ViewBag.StatusUebersicht?.BescheidAnAS?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Widerspruchsfrist</td>
+                                <td>@ViewBag.StatusUebersicht?.Widerspruchsfrist?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Widerspruch Gebühren</td>
+                                <td>@ViewBag.StatusUebersicht?.WiderspruchGebuehren?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Widerspruch Zulassung</td>
+                                <td>@ViewBag.StatusUebersicht?.WiderspruchZulassung?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Bestandskräftig</td>
+                                <td>@ViewBag.StatusUebersicht?.Bestandskraeftig?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Widerspruch bearbeitet</td>
+                                <td>@ViewBag.StatusUebersicht?.WiderspruchBearbeitet?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Geändert am</td>
+                                <td>@ViewBag.StatusUebersicht?.GeaendertAm?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                            <tr>
+                                <td>Geändert von</td>
+                                <td>@ViewBag.StatusUebersicht?.GeaendertVon</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+
+        @{
+            List<Antragsteller> antragstellerListe = ViewBag.Mode == "edit"
+            ? (List<Antragsteller>)ViewBag.Antragsteller
+            : new List<Antragsteller>();
+
+            var a1 = antragstellerListe.FirstOrDefault(a => a.Type == "Antragsteller 1");
+            var gebuhr = antragstellerListe.FirstOrDefault(a => a.Type == "Gebührenbescheid an");
+            var brief = antragstellerListe.FirstOrDefault(a => a.Type == "Brief");
+
+            // Alle dynamischen (Antragsteller 2, 3, ...) für JS
+            var dynamische = antragstellerListe
+            .Where(a => a.Type != "Antragsteller 1" && a.Type != "Gebührenbescheid an" && a.Type != "Brief")
+            .ToList();
+        }
+
+        
+
+        <div id="tab-applicant" class="tab-panel">
+
+            <div class="create-akte-btn-container">
+                <div class="btn-group">
+
+                    <button class="akte-btn akte-btn-primary"
+                            id="adresseSuchenBtn"
+                            onclick="toggleAdresseModal()"
+                            disabled>
+                        <i class="fa-solid fa-magnifying-glass"></i> Adresse suchen
+                    </button>
+
+                    <button class="akte-btn akte-btn-primary" id="btnAlleAuswaehlen" onclick="alleAuswaehlen()"><i class="fa-solid fa-list-check"></i> Alle auswählen</button>
+
+                    <button class="akte-btn akte-btn-danger" onclick="clearApplicants()">
+                        <i class="fa-solid fa-trash"></i> Entfernen
+                    </button>
+
+
+                    <div class="status-box" id="badge-tab2">
+                        <i class="fa-solid fa-circle-check icon-success" id="badge-tab2-icon"></i>
+                        <span id="badge-tab2-text">Ausgefüllt.</span>
+                    </div>
+                </div>
+
+
+                <div class="btn-group">
+                    @* Nur im Edit-Modus: direkt speichern *@
+                    @if (ViewBag.Mode == "edit")
+                    {
+                        <button class="akte-btn akte-btn-save-ready"
+                                id="btnSaveAntragsteller"
+                                data-aktenzeichen="@ViewBag.Aktenzeichen"
+                                onclick="saveAntragstellerTab(this.dataset.aktenzeichen)"
+                                disabled>
+                            <i class="fa-solid fa-floppy-disk" id="antragstellerSaveIcon"></i> Antragsteller speichern
+                        </button>
+                    }
+                    else
+                    {
+                        @* Im Create-Modus: weiter zu Tab 3 *@
+                        <button class="akte-btn akte-btn-secondary"
+                                id="btnWeiter2"
+                                onclick="goToContacts()"
+                                disabled>
+                            <i class="fa-solid fa-arrow-right"></i> Weiter
+                        </button>
+                    }
+                </div>
+            </div>
+
+
+            <div class="applicant-block">
+                <div class="applicant-block-header" data-type="Antragsteller 1">
+                    <input type="checkbox" /> Antragsteller 1
+                </div>
+                <div class="field-group cols-1">
+
+                    <textarea class="modal-textarea antragsteller-adresse req-tab2"
+                              placeholder="Adresse *"
+                              oninput="validateTab2()">@(a1?.Adresse ?? "")</textarea>
+                    <textarea class="modal-textarea antragsteller-adresszusatz"
+                              placeholder="Adresszusatz">@(a1?.AdresseZusatz ?? "")</textarea>
+                </div>
+                <div class="field-group">
+                    <input class="modal-input antragsteller-tel req-tab2" placeholder="Tel *" oninput="validateTab2()" value="@(a1?.Tel ?? "")" />
+                    <input class="modal-input antragsteller-fax" placeholder="Fax" value="@(a1?.Fax ?? "")" />
+                    <input class="modal-input antragsteller-email req-tab2" placeholder="E-Mail *" style="grid-column:1/-1;" oninput="validateTab2()" value="@(a1?.Email ?? "")" />
+                </div>
+            </div>
+
+
+            <button class="add-applicant-btn">
+                <i class="fa-solid fa-plus"></i> weiteren Antragsteller hinzufügen
+            </button>
+
+
+            <div class="applicant-block">
+                <div class="applicant-block-header" data-type="Gebührenbescheid an">
+                    <input type="checkbox" /> Gebührenbescheid an
+                </div>
+                <div class="field-group cols-1">
+                    <textarea class="modal-textarea antragsteller-adresse req-tab2"
+                              placeholder="Adresse *"
+                              oninput="validateTab2()">@(gebuhr?.Adresse ?? "") </textarea>
+                    <textarea class="modal-textarea antragsteller-adresszusatz"
+                              placeholder="Adresszusatz"
+                              >@(gebuhr?.AdresseZusatz ?? "")</textarea>
+                </div>
+                <div class="field-group">
+                    <input class="modal-input antragsteller-tel req-tab2" placeholder="Tel *" oninput="validateTab2()" value="@(gebuhr?.Tel ?? "")" />
+                    <input class="modal-input antragsteller-fax" placeholder="Fax" value="@(gebuhr?.Fax ?? "")" />
+                    <input class="modal-input antragsteller-email req-tab2" placeholder="E-Mail *" style="grid-column:1/-1;" oninput="validateTab2()" value="@(gebuhr?.Email ?? "")" />
+                </div>
+            </div>
+
+
+            <div class="applicant-block">
+                <div class="applicant-block-header" data-type="Brief">
+                    <input type="checkbox" /> Brief
+                </div>
+                <div class="field-group cols-1">
+                    <textarea class="modal-textarea antragsteller-adresse req-tab2"
+                              placeholder="Adresse *"
+                              oninput="validateTab2()">@(brief?.Adresse ?? "")</textarea>
+                    <textarea class="modal-textarea antragsteller-adresszusatz"
+                              placeholder="Adresszusatz">@(brief?.AdresseZusatz ?? "")</textarea>
+                </div>
+                <div class="field-group">
+                    <input class="modal-input antragsteller-tel req-tab2" placeholder="Tel *" oninput="validateTab2()" value="@(brief?.Tel ?? "")"  />
+                    <input class="modal-input antragsteller-fax" placeholder="Fax" value="@(brief?.Fax ?? "")"/>
+                    <input class="modal-input antragsteller-email req-tab2" placeholder="E-Mail *" style="grid-column:1/-1;" oninput="validateTab2()" value="@(brief?.Email ?? "")" />
+                </div>
+            </div>
+
+
+        </div>
+
+
+
+        <div id="tab-contacts" class="tab-panel">
+
+            <div class="create-akte-btn-container">
+                <div class="btn-group">
+                    <!-- Tab Kontakte -->
+                    <button class="akte-btn akte-btn-primary" onclick="exportTable('kontakte')">
+                        <i class="fa-solid fa-file-export"></i> Export
+                    </button>
+                    @if (ViewBag.Mode == "create")
+                    {
+                        <div class="status-box text-success-modal visible" id="badge-tab2">
+                            <i class="fa-solid fa-circle-check icon-success" id="badge-tab2-icon"></i>
+                            <span id="badge-tab2-text">
+                                Vorgangsdaten &amp; Antragsteller bereit zum Speichern.
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <div class="btn-group">
+                    @* Nur im Create-Modus: Alle 2 Seiten speichern *@
+                    @if (ViewBag.Mode == "create")
+                    {
+                    <button class="akte-btn akte-btn-save-locked"
+                            id="btnSaveAll"
+                            data-zulassung="@ViewBag.Zulassung"
+                            data-aktenzeichen="@ViewBag.Aktenzeichen"
+                            onclick="saveAll(this.dataset.zulassung.trim(), this.dataset.aktenzeichen.trim())"
+                            disabled>
+                        <i class="fa-solid fa-lock" id="saveIcon"></i> Speichern
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div id="kontakteTableContainer">
+                    @await Html.PartialAsync("_KontakteTable", ViewBag.KontakteModel as KontaktViewModel)
+                </div>
+            </div>
+
+        </div>
+
+
+        <div id="tab-ablaufdaten" class="tab-panel">
+
+            <div class="create-akte-btn-container">
+                <div class="btn-group">
+                    <!-- Tab Ablaufdaten -->
+                    <button class="akte-btn akte-btn-primary" onclick="exportTable('ablaufdaten')">
+                        <i class="fa-solid fa-file-export"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div id="ablaufdatenTableContainer">
+                    @await Html.PartialAsync("_AblaufdatenTable", ViewBag.AblaufdatenModel as AblaufdatenViewModel)
+                </div>
+            </div>
+
+        </div>
+
+        <div id="tab-gebuehren" class="tab-panel">
+
+            <div class="create-akte-btn-container">
+                <div class="btn-group">
+                    <button class="akte-btn akte-btn-primary" data-funktion="Vorschuss Neu" disabled>
+                        <i class="fa-solid fa-plus"></i> Vorschuss anlegen
+                    </button>
+                    <button class="akte-btn akte-btn-primary" data-funktion="Gebühr Neu" disabled>
+                        <i class="fa-solid fa-plus"></i> Gebühr anlegen
+                    </button>
+                    <button class="akte-btn akte-btn-primary" data-funktion="Widerspruch Neu" disabled>
+                        <i class="fa-solid fa-scale-balanced"></i> Widerspruch
+                    </button>
+                    <button class="akte-btn akte-btn-primary" data-funktion="Stornieren" disabled>
+                        <i class="fa-solid fa-ban"></i> Stornieren
+                    </button>
+                    <button class="akte-btn akte-btn-primary" data-funktion="Löschen" disabled>
+                        <i class="fa-solid fa-trash"></i> Löschen
+                    </button>
+                    <button class="akte-btn akte-btn-primary" data-funktion="Status anpassen">
+                        <i class="fa-solid fa-gear"></i> Status anpassen
+                    </button>
+
+                    <button type="button" class="akte-btn akte-btn-primary" id="gAktualisieren">
+                        <i class="fa-solid fa-rotate"></i> Aktualisieren
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div id="gebuehrenTableContainer">
+                    @await Html.PartialAsync("_GebuehreTable", ViewBag.GebuehrenModel as List<GebuehrMitTitelViewModel>)
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+    var dynamischeAntragsteller = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(dynamische));
+</script>
+
+
+<script>
+    var abteilungReferatData = @Html.Raw(ViewBag.AbteilungReferatJson ?? "[]");
+    var initialReferat = "@Model?.Referat?.Trim()";
+
+    function populateReferatDropdown(selectedAbteilung, selectedReferat) {
+        var referatSelect = document.getElementById('inputReferat');
+        referatSelect.innerHTML = '';
+
+        var filtered = abteilungReferatData.filter(function (x) {
+            return x.abteilung === selectedAbteilung && x.referat;
+        });
+
+        filtered.forEach(function (item) {
+            var opt = document.createElement('option');
+            opt.value = item.referat;
+            opt.text = item.referat;
+            if (selectedReferat && item.referat === selectedReferat) {
+                opt.selected = true;
+            }
+            referatSelect.appendChild(opt);
+        });
+    }
+
+    function onAbteilungChanged() {
+        var abteilungSelect = document.getElementById('inputAbteilung');
+        populateReferatDropdown(abteilungSelect.value, null);
+        validateTab1();
+    }
+
+    // Direkt ausführen statt auf DOMContentLoaded zu warten —
+    // das Script läuft erst, nachdem container.innerHTML gesetzt wurde,
+    // die Elemente existieren also bereits.
+    (function initReferatDropdown() {
+        var abteilungSelect = document.getElementById('inputAbteilung');
+        if (abteilungSelect && abteilungSelect.value) {
+            populateReferatDropdown(abteilungSelect.value, initialReferat);
+        }
+    })();
+</script>

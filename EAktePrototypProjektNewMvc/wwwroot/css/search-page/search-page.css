@@ -1,0 +1,72 @@
+﻿/* ============================================================
+   SEARCH — ERWEITERTE SUCHMASKE.
+   ============================================================ */
+
+/* Suchtabelle mit voller Höhe. */
+.hierarchy-suche-table {
+    height: calc(100vh - 120px);
+    overflow: auto;
+}
+
+/* Typauswahl-Zeile mit gleichmäßiger Verteilung. */
+.selectTypeField {
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    justify-content: space-between;
+}
+
+/* Dynamische Felder standardmäßig versteckt. */
+.dynamic-fields {
+    display: none;
+}
+
+/* Feldauswahl-Bereich nebeneinander. */
+.selectFieldsInner {
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    gap: 10px;
+}
+
+/* Suchschaltfläche mit Akzentrahmen. */
+.btn-search {
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent);
+}
+
+    /* Rahmen gedämpft beim Hover. */
+    .btn-search:hover {
+        border: 1px solid var(--color-border-lines);
+    }
+
+/* Inline-Suchfeld in der Kopfzeile — rahmenlos und transparent. */
+.header-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    border-color: transparent;
+    background: transparent;
+    font-size: 0.875rem;
+    padding: 0;
+}
+
+    .header-search-input:hover,
+    .header-search-input:focus {
+        border-color: transparent;
+        outline: none;
+    }
+
+    /* Autofill-Stil für Kopfzeilen-Suchfeld. */
+    .header-search-input:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px var(--color-bg-second) inset !important;
+        -webkit-text-fill-color: var(--color-input-placeholder) !important;
+    }
+
+/* Aktionsschaltflächen-Gruppe in einer Zeile. */
+.action-buttons-inner {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+}

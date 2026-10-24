@@ -1,0 +1,119 @@
+﻿<div id="fileModalOrdner" class="file-modal" style="display:none;">
+
+
+    <!-- ParentObjectId -->
+    <input hidden id="modalOrdnerParentObjectId" value="@ViewBag.ParentObjectId" />
+    <input hidden id="modalOrdnerMode" value="@ViewBag.Mode" />
+
+    <div class="modal-header" id="modalHeader">
+        <div class="modal-header-title">
+            <i class="fa-solid fa-display"></i>
+            [eAkte] @(((string)ViewBag.Mode)?.Trim().ToLower() == "edit" ? "Bearbeiten" : "Erstellen") eines neuen Ordners
+        </div>
+        <button class="modal-close-btn" onclick="closeModalOrdner()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="action-header">
+        <h2>@(((string)ViewBag.Mode)?.Trim().ToLower() == "edit" ? "Bearbeiten" : "Erstellen") eines Ordners (eAkte)</h2>
+        <div class="action-header-meta">
+            <span class="meta-chip">
+                <i class="fa-solid fa-id-badge"></i>
+                Aktenzeichen: <strong id="headerAktenzeichen">@ViewBag.Aktenzeichen</strong>
+            </span>
+            <span class="meta-chip">
+                <i class="fa-solid fa-folder" style="color: @ViewBag.ParentColorHex"></i>
+                @(((string)ViewBag.Mode)?.Trim().ToLower() == "edit" ? "" : "Eltern-")Ordner: <strong id="headerZulassung">@ViewBag.ParentName</strong>
+            </span>
+        </div>
+    </div>
+
+
+
+    <div class="modal-body">
+
+
+        <div id="tab-process" class="tab-panel active">
+
+            <div class="create-akte-btn-container">
+
+                <div class="status-box" id="nameErrorBox">
+                    <i class="fa-solid fa-circle-exclamation icon-error" id="nameErrorIcon" style="margin-top: 3px"></i>
+                    <span id="nameErrorText"></span>
+                </div>
+
+                @if (ViewBag.Mode == "create" || ViewBag.Mode == null)
+                {
+                    <button class="akte-btn akte-btn-secondary"
+                            onclick="saveOrdner()">
+                        <i class="fa-solid fa-arrow-right"></i> Erstellen
+                    </button>
+                }
+                @* Nur im Edit-Modus: direkt speichern *@
+                else if (ViewBag.Mode == "edit")
+                {
+                    <button class="akte-btn akte-btn-secondary"
+                            onclick="saveOrdner()">
+                        <i class="fa-solid fa-floppy-disk"></i>Speichern
+                    </button>
+                }
+            </div>
+
+            <p class="section-label">Ordnerinformationen</p>
+            <div class="field-group">
+
+
+                <div class="field-wrapper">
+                    <label class="field-label">
+                        Name <span class="req-star">*</span>
+                    </label>
+                    <input class="modal-input req-tab1"
+                           id="inputName"
+                           value="@ViewBag.Name"
+                           oninput="handleNameInput()" />
+                </div>
+
+
+                <div class="field-wrapper">
+                    <label class="field-label">
+                        Bemerkung
+                    </label>
+                    <input class="modal-input req-tab1"
+                           id="inputAbteilung"
+                           value="@ViewBag.Bemerkung"
+                            />
+                </div>
+
+                @{
+                    var color = (string)ViewBag.ColorHex ?? "#4F8EF7";
+                }
+
+                <div class="field-wrapper">
+                    <label class="field-label">Farbe</label>
+                    <div class="color-picker-wrapper" id="pickerWrapper">
+                        <div class="color-display" id="colorDisplay" onclick="togglePanel()">
+                            <div class="color-swatch" id="mainSwatch"></div>
+                            <span class="color-hex" id="mainHex">@color</span>
+                            <i class="ti ti-chevron-down color-chevron" aria-hidden="true"></i>
+                        </div>
+                        <div class="color-panel" id="colorPanel">
+                            <div class="palette-grid" id="paletteGrid"></div>
+                            <div class="hex-input-row">
+                                <span class="hex-label">HEX</span>
+                                <input class="hex-input" id="hexInput" maxlength="7" value="@color" oninput="onHexInput(this.value)" />
+                                <input type="color" class="native-color" id="nativeColor" value="@color" oninput="selectColor(this.value)" />
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="inputFarbe" value="@color" />
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

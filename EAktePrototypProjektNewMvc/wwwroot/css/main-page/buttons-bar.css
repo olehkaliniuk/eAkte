@@ -1,0 +1,82 @@
+﻿/* ============================================================
+   BUTTON BAR — Tab-Leiste und Aktionsschaltflächen.
+   ============================================================ */
+
+/* Äußerer Container — weißer Balken mit feinem Rahmen. */
+.buttons-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 6px;
+    background: var(--color-bg-second);
+    border: 0.5px solid var(--color-border-lines);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--box-shadows);
+    gap: 8px;
+    margin: 5px;
+}
+
+/* Linke und rechte Gruppe. */
+.buttons-container-inner-first,
+.buttons-container-inner-second {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* Alle Schaltflächen — transparent, kein Rahmen. */
+.buttons-container button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition: background 0.12s, color 0.12s;
+    white-space: nowrap;
+}
+
+    /* Hover — heller Hintergrund, Akzentfarbe. */
+    .buttons-container button:hover {
+        background: var(--color-bg);
+        color: var(--color-accent);
+    }
+
+    /* Aktiver Tab — gleich wie Hover, dauerhaft. ohne #Dokumentenubersicht */
+    .buttons-container button.active:not(#Dokumentenubersicht) {
+        background: var(--color-bg-second);
+        color: var(--color-accent);
+        border-bottom: 1px solid var(--color-accent);
+    }
+
+/* Trennlinie zwischen Gruppen — dünne vertikale Linie. */
+.btn-divider {
+    width: 0.5px;
+    height: 18px;
+    background: var(--color-border-lines);
+    margin: 0 3px;
+    flex-shrink: 0;
+}
+
+
+
+/* Excel-Button — grün als Sonderaktion. */
+#excelBtn {
+    background-color: var(--color-green-bg);
+}
+
+    #excelBtn:hover {
+        background: rgba(22, 163, 74, 0.08);
+        color: #16a34a;
+    }
+
+
+.fa-file-excel {
+    color: var(--color-sort-asc);
+}

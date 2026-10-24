@@ -1,0 +1,533 @@
+﻿@using Microsoft.AspNetCore.Html
+@using System.Text.Encodings.Web
+@using EAktePrototypProjektNewMvc.Models
+@model EAktePrototypProjektNewMvc.Models.Vorgange.VorgangViewModel
+
+@functions{
+    public IHtmlContent SortHeader(string column, string title, string currentColumn, string currentDirection)
+    {
+        var arrowHtml = "";
+        if (currentColumn == column)
+        {
+            arrowHtml = currentDirection == "asc"
+                ? " <span class=\"sort-arrow sort-asc\">▲</span>"
+                : " <span class=\"sort-arrow sort-desc\">▼</span>";
+        }
+
+        // Titel kommt aus der DB, deshalb encodieren.
+        var safeTitle = HtmlEncoder.Default.Encode(title ?? "");
+        return new HtmlString(
+            $"<th onclick=\"sortTable('{column}')\" style=\"cursor:pointer;\">{safeTitle}{arrowHtml}</th>"
+        );
+    }
+
+    // DatumAntrag hat kein einzelnes Suchfeld, sondern einen Von/Bis-Zeitraum
+    // und wird deshalb im Such-Header separat behandelt, nicht über diese Funktion.
+    string GetSearchValue(string key) => key switch
+    {
+        "Aktenzeichen"      => Model.Search.Aktenzeichen,
+        "Zulassungsnummer"  => Model.Search.Zulassungsnummer,
+        "Status"            => Model.Search.Status,
+        "Aktenzustand"      => Model.Search.Aktenzustand,
+        _ => ""
+    };
+}
+
+<input type="hidden" id="currentSortColumn" value="@Model.SortColumn" />
+<input type="hidden" id="currentSortDirection" value="@Model.SortDirection" />
+<input type="hidden" id="currentNodeType" value="Vorgang" />
+<input type="hidden" id="tableEndpoint" value="@(Model.ViewMode == "MeineVorgaenge" ? "/bescheidbearbeitung/load-meine-vorgaenge" : Model.ViewMode == "Mitzeichnung" ? "/bescheidbearbeitung/load-vorgange-mitzeichnung" : "/bescheidbearbeitung/load-vorgange")" />
+
+@if (Model.Akte != null)
+{
+<input type="hidden" id="parentObjectId" value="@Model.Akte.ObjektId" />
+
+<div class="object-container">
+    <div class="object-container-inner">
+        <div class="info-header">
+         <h2>
+            @if (Model.Akte.Icon != null && Model.Akte.Icon.Length > 0)
+            {
+                var base64 = Convert.ToBase64String(Model.Akte.Icon);
+                var imgSrc = $"data:image/x-icon;base64,{base64}";
+
+                <img src="@imgSrc" style="width:1em;" />
+            }
+            else
+            {
+                <span class="toggle-icon">
+                    <i class="fa-solid fa-folder"></i>
+                </span>
+            }
+            @Model.Akte.Zulassungsnummer
+        </h2>
+        <i class="fa-solid fa-circle-info btn-info-table" title="Info zu @Model.Akte.Zulassungsnummer" onclick="toggleInfo('@Model.Akte.ObjektId', event)"></i>
+        </div>
+                <!-- Info -->
+                <div id="info-@Model.Akte.ObjektId" class="info-row" style="display:none;">
+                        <div class="info-content">
+
+                            <div class="info-item">
+                                <span class="info-label">Objekt-Typ:</span>
+                                <span class="info-value">Akte</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Zulassungsnummer:</span>
+                                <span class="info-value">@Model.Akte.Zulassungsnummer</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Laufende Nummer:</span>
+                                <span class="info-value">@Model.Akte.LfdNr</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Hauptgruppenummer:</span>
+                                <span class="info-value">@Model.Akte.HauptgruppeNummer</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Nebengruppenummer:</span>
+                                <span class="info-value">@Model.Akte.NebengruppeNummer</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Zustand:</span>
+                                <span class="info-value">@Model.Akte.Zustand</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Erzeugt Von:</span>
+                                <span class="info-value">@Model.Akte.ErzeugtVon</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Erzeugt Am:</span>
+                                <span class="info-value">@Model.Akte.ErzeugtAm?.ToString("dd.MM.yyyy")</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Geändert Von:</span>
+                                <span class="info-value">@Model.Akte.GeandertVon</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Geändert Am:</span>
+                                <span class="info-value">@Model.Akte.GeandertAm?.ToString("dd.MM.yyyy")</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Abteilung:</span>
+                                <span class="info-value">@Model.Akte.Abteilung</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Referat:</span>
+                                <span class="info-value">@Model.Akte.Referat</span>
+                            </div>
+
+                            <div class="info-item">
+                                <span class="info-label">Objekt-Id:</span>
+                                <span class="info-value">
+                                    <a href="@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@Model.Akte.ObjektId">@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@Model.Akte.ObjektId</a>
+                                </span>
+                            </div>
+
+                        </div>
+                </div>
+    </div>
+</div>
+}
+else if (Model.ViewMode == "Mitzeichnung")
+{
+<div class="object-container">
+    <div class="object-container-inner">
+        <div class="info-header">
+        <h2>Mitzeichnung</h2>
+        <i class="fa-solid fa-circle-info btn-info-table"></i>
+        </div>
+    </div>
+</div>
+}
+else
+{
+    
+}
+
+<div class="hierarchy-table">
+<div class="table-container">
+    <div class="table-container-inner">
+        <h2 class="table-header-text">
+            @if (Model.Akte != null)
+            {
+                @:Vorgänge von <span>@Model.Akte.Zulassungsnummer</span>
+            }
+            else if (Model.ViewMode == "MeineVorgaenge")
+            {
+                @:Meine Vorgänge
+            }
+            else
+            {
+                @:Vorgänge von <span>Mitzeichnung</span>
+
+                @foreach (var vorgang in Model.Vorgang
+                    .GroupBy(v => new { v.Abteilung, v.Referat })
+                    .Select(g => g.First()))
+                {
+                    <span class="mode-mitzeichnung">
+                        <span>
+                            <i class="fas fa-building"></i> <span style="font-weight: 300;"><span class="m-word">Abteilung:</span> @vorgang.Abteilung</span>
+                            &nbsp;|&nbsp;
+                            <i class="fas fa-users"></i> <span style="font-weight: 300;"><span class="m-word">Referat:</span> @vorgang.Referat</span>
+                        </span>
+                    </span>
+                }
+            }
+        </h2>
+        <table>
+           <thead>
+                <tr class="search">
+                    <th class="actions"></th>
+                    @foreach (var col in Model.Columns)
+                    {
+                        <th>
+                            @if (col.IsSearchable)
+                            {
+                                if (col.ColumnKey == "DatumAntrag")
+                                {
+                                    <div style="display:flex; gap:4px;">
+                                        <span class="von-bis">Von:</span>
+                                        <input type="date"
+                                               id="searchDatumAntragVon"
+                                               value="@(Model.Search.DatumAntragVon?.ToString("yyyy-MM-dd"))" />
+                                        <span class="von-bis">Bis:</span>
+                                        <input type="date"
+                                               id="searchDatumAntragBis"
+                                               value="@(Model.Search.DatumAntragBis?.ToString("yyyy-MM-dd"))" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <input data-search-column="@col.ColumnKey"
+                                           value="@GetSearchValue(col.ColumnKey)" placeholder="Suchen.." />
+                                }
+                            }
+                        </th>
+                    }
+                </tr>
+
+                <tr>
+                    <th>Aktionen</th>
+                    @foreach (var col in Model.Columns)
+                    {
+                        if (col.IsSortable)
+                        {
+                            @SortHeader(col.ColumnKey, col.Title, Model.SortColumn, Model.SortDirection)
+                        }
+                        else
+                        {
+                            <th>@col.Title</th>
+                        }
+                    }
+                </tr>
+                </thead>
+            <tbody>
+                @if (Model.Vorgang != null && Model.Vorgang.Count > 0)
+                {
+                    foreach (var v in Model.Vorgang)
+                    {
+                        <tr class="js-table-node" data-object-id="@v.ObjektId" data-node-type="Vorgang">
+                            <td>
+                                <i class="fa-solid fa-circle-info btn-info-table" title="Info zu @v.Aktenzeichen" onclick="toggleInfo('@v.ObjektId', event)"></i>
+                                <i class="fa-solid fa-circle-chevron-right btn-info-table weiter-btn" title="Klicken um eine eben tiefer zu navigieren." style="margin-left:5px"></i>
+                            </td>
+
+                            @foreach (var col in Model.Columns)
+                            {
+                                switch (col.ColumnKey)
+                                {
+                                    case "Aktenzeichen":
+                                        <td>
+                                            @if (v.Icon != null && v.Icon.Length > 0)
+                                            {
+                                                <img src="data:image/x-icon;base64,@Convert.ToBase64String(v.Icon)" style="width:1em;" />
+                                            }
+                                            else
+                                            {
+                                                <span class="toggle-icon"><i class="fa-solid fa-folder"></i></span>
+                                            }
+                                            @v.Aktenzeichen
+                                        </td>
+                                        break;
+                                    case "Zulassungsnummer":
+                                        <td>@v.Zulassungsnummer</td>
+                                        break;
+                                    case "Status":
+                                        <td>@v.Status</td>
+                                        break;
+                                    case "Aktenzustand":
+                                        <td>@v.Aktenzustand</td>
+                                        break;
+                                    case "DatumAntrag":
+                                        <td>@(v.DatumAntrag?.ToString("dd.MM.yyyy"))</td>
+                                        break;
+                                    default:
+                                        <td></td>
+                                        break;
+                                }
+                            }
+                        </tr>
+
+                        <!-- Info -->
+                        <tr id="info-@v.ObjektId" class="info-row" style="display:none;">
+                            <td colspan="@(Model.Columns.Count + 1)">
+                             <div class="info-content">
+                                <div class="info-item">
+                                    <span class="info-label">Objekt-Typ:</span>
+                                    <span class="info-value">Vorgang</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">UserID:</span>
+                                    <span class="info-value">@v.UserID</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Abteilung:</span>
+                                    <span class="info-value">@v.Abteilung</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Stelle:</span>
+                                    <span class="info-value">@v.Stelle</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Antragsart:</span>
+                                    <span class="info-value">@v.Antragsart</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Bescheidtyp:</span>
+                                    <span class="info-value">@v.Bescheidtyp</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">ErzeugtVon:</span>
+                                    <span class="info-value">@v.ErzeugtVon</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">ErzeugtAm:</span>
+                                    <span class="info-value">@v.ErzeugtAm?.ToString("dd.MM.yyyy")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Veröffentlicht:</span>
+                                    <span class="info-value">@(v.Veroeffentlicht ? "Ja" : "Nein")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Gegenstand:</span>
+                                    <span class="info-value">@v.Gegenstand</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Abteilung:</span>
+                                    <span class="info-value">@v.Abteilung</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Referat:</span>
+                                    <span class="info-value">@v.Referat</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Objekt-Id:</span>
+                                    <span class="info-value">
+                                        <a href="@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@v.ObjektId">@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@v.ObjektId</a>
+                                    </span>
+                                </div>
+
+                            </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="@(Model.Columns.Count + 1)" style="text-align:center;">Keine Einträge gefunden</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<div class="pagination-container">
+
+    <div class="pagination-buttons">
+        @{ bool isEmpty = Model.TotalPages == 0; }
+
+        <button class="p-btn" onclick="loadPage(1)"
+            @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-left"></i>
+        </button>
+        <button class="p-btn" onclick="loadPage(@(Model.CurrentPage - 1))"
+            @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-left"></i>
+        </button>
+
+        <div class="pagination-page-info">
+            <input id="currentPage" type="number" min="1"
+                max="@Model.TotalPages" value="@Model.CurrentPage"
+                @(isEmpty ? "disabled" : "") />
+            <span class="pagination-sep">von</span>
+            <span class="pagination-total">@Model.TotalPages</span>
+        </div>
+
+        <button class="p-btn" onclick="loadPage(@(Model.CurrentPage + 1))"
+            @(Model.CurrentPage >= Model.TotalPages || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-right"></i>
+        </button>
+        <button class="p-btn" onclick="loadPage(@Model.TotalPages)"
+            @(Model.CurrentPage >= Model.TotalPages || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-right"></i>
+        </button>
+    </div>
+
+    <!-- Einträge pro Seite -->
+    <div class="page-size">
+        <label class="pagination-label">Einträge pro Seite</label>
+        <select id="pageSizeSelect" class="pagination-select">
+            @foreach (var size in new[] { 1, 5, 10, 25, 50, 100 })
+            {
+                var selected = Model.PageSize == size ? "selected" : "";
+                @:<option value="@size" @selected>@size</option>
+            }
+        </select>
+    </div>
+
+    <!-- Gesamtanzahl + Actions -->
+    <div class="actions2">
+        <span class="pagination-label">Gesamt</span>
+        <input class="pagination-count-input" name="name" value="@Model.TotalCount" readonly />
+        <button id="resetBtn" class="p-btn" title="Aktualisieren">
+            <i class="fa fa-sync"></i>
+        </button>
+        <button class="p-btn" title="Spalten anpassen" onclick="openColumnDialog('Vorgang')">
+            <i class="fa-solid fa-table-columns"></i>
+        </button>
+        <button class="p-btn" onclick="loadPage(1)" title="Suchen">
+            <i class="fa fa-search"></i>
+        </button>
+    </div>
+
+</div>
+
+</div>
+
+
+<script>
+(function () {
+
+const endpoint = document.getElementById("tableEndpoint")?.value ?? "/bescheidbearbeitung/load-vorgange";
+const tableContainer = () => document.getElementById("tableContainer");
+
+function getValue(id, fallback = "") {
+    return document.getElementById(id)?.value ?? fallback;
+}
+
+function getFilters() {
+    const filters = {
+        pageSize: getValue("pageSizeSelect", 10),
+
+        // Parent-ObjectId (Akte), keine Tabellenspalte. Im Mitzeichnung-Modus leer.
+        objectId: getValue("parentObjectId"),
+
+        // DatumAntrag ist ein Von/Bis-Zeitraum, kein einzelnes Suchfeld,
+        // deshalb hier weiterhin explizit statt über data-search-column.
+        DatumAntragVon: getValue("searchDatumAntragVon"),
+        DatumAntragBis: getValue("searchDatumAntragBis")
+    };
+
+    // Alle übrigen Spalten kommen generisch aus den Feldern mit data-search-column.
+    document.querySelectorAll("[data-search-column]").forEach(i => {
+        filters[i.dataset.searchColumn] = i.value;
+    });
+
+    return filters;
+}
+
+function fetchTable(params) {
+    const query = new URLSearchParams(params);
+    fetch(`${endpoint}?${query}`)
+        .then(r => r.text())
+        .then(html => {
+            tableContainer().innerHTML = html;
+            attachEvents();
+        });
+}
+
+window.loadPage = function (page = 1) {
+    fetchTable({ ...getFilters(), page });
+};
+
+window.sortTable = function (column) {
+    const currentColumn = getValue("currentSortColumn");
+    const currentDirection = getValue("currentSortDirection", "asc");
+
+    const newDirection =
+        currentColumn === column && currentDirection === "asc"
+            ? "desc"
+            : "asc";
+
+    fetchTable({
+        ...getFilters(),
+        page: 1,
+        sortColumn: column,
+        sortDirection: newDirection
+    });
+};
+
+function attachEvents() {
+
+    // Generische Suchfelder + die beiden Von/Bis-Sonderfelder für DatumAntrag.
+    const searchInputs = () =>
+        document.querySelectorAll("[data-search-column], #searchDatumAntragVon, #searchDatumAntragBis");
+
+    searchInputs().forEach(input =>
+        input.addEventListener("keypress", e => {
+            if (e.key === "Enter") window.loadPage(1);
+        })
+    );
+
+    document.getElementById("pageSizeSelect")
+        ?.addEventListener("change", () => window.loadPage(1));
+
+    document.getElementById("currentPage")
+        ?.addEventListener("input", e => {
+            const page = parseInt(e.target.value, 10);
+            const max = parseInt(e.target.max, 10);
+
+            if (!isNaN(page)) {
+                if (page < 1) return e.target.value = 1;
+                if (page > max) return e.target.value = max;
+                window.loadPage(page);
+            }
+        });
+
+    document.getElementById("resetBtn")
+        ?.addEventListener("click", () => {
+            searchInputs().forEach(i => i.value = "");
+            document.getElementById("pageSizeSelect").value = 10;
+            window.loadPage(1);
+        });
+}
+
+attachEvents();
+
+})();
+</script>

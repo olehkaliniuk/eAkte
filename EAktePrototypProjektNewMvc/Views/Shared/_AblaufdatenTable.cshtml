@@ -1,0 +1,132 @@
+﻿@using EAktePrototypProjektNewMvc.Models.CreateAkte.Ablaufdaten
+@using Microsoft.AspNetCore.Html
+@model AblaufdatenViewModel
+
+
+@functions{
+    public IHtmlContent SortHeader(string column, string title, string currentColumn, string currentDirection)
+    {
+        var arrowHtml = "";
+        if (currentColumn == column)
+        {
+            if (currentDirection == "asc")
+                /* Pfeil nach oben — Klasse sort-asc. */
+                arrowHtml = " <span class=\"sort-arrow sort-asc\">▲</span>";
+            else
+                /* Pfeil nach unten — Klasse sort-desc. */
+                arrowHtml = " <span class=\"sort-arrow sort-desc\">▼</span>";
+        }
+        return new HtmlString(
+            $"<th onclick=\"sortAblaufdaten('{column}')\" style=\"cursor:pointer;\">{title}{arrowHtml}</th>"
+        );
+    }
+}
+
+
+<input type="hidden" id="aSortColumn"    value="@Model.SortColumn" />
+<input type="hidden" id="aSortDirection" value="@Model.SortDirection" />
+
+<table class="modal-table" id="ablaufdatenTable">
+    <thead>
+        <tr class="search">
+            <th style="width:90px;">
+                <button class="p-btn" onclick="addAblaufdatenRow()" title="Neu">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </th>
+            <th><input id="aSearchEintragAmVom" class="a-filter" type="date" value="@Model.Search.EintragAmVom?.ToString("yyyy-MM-dd")" /></th>
+            <th><input id="aSearchEintragVon"   class="a-filter" value="@Model.Search.EintragVon"   placeholder="Eingetragen von" /></th>
+            <th><input id="aSearchAktionAm"     class="a-filter" type="date" value="@Model.Search.AktionAm?.ToString("yyyy-MM-dd")" /></th>
+            <th>
+                <select id="aSearchAktionTyp" class="a-filter">
+                    <option value="">— Alle —</option>
+                    @foreach (var typ in Model.Aktionstypen)
+                    {
+                        var selected = Model.Search.AktionTyp == typ.ParameterWertString ? "selected" : "";
+                        @:<option value="@typ.ParameterWertString" @selected>@typ.ParameterWertString</option>
+                    }
+                </select>
+            </th>
+            <th><input id="aSearchBemerkung"    class="a-filter" value="@Model.Search.Bemerkung"    placeholder="Bemerkung" /></th>
+        </tr>
+        <tr>
+            <th>Aktionen</th>
+            @SortHeader("EintragAmVom", "Eingetragen am", Model.SortColumn, Model.SortDirection)
+            @SortHeader("EintragVon",   "Eingetragen von",Model.SortColumn, Model.SortDirection)
+            @SortHeader("AktionAm",     "Aktion am",      Model.SortColumn, Model.SortDirection)
+            @SortHeader("AktionTyp",    "Aktionstyp",     Model.SortColumn, Model.SortDirection)
+            @SortHeader("Bemerkung",    "Bemerkung",      Model.SortColumn, Model.SortDirection)
+        </tr>
+    </thead>
+    <tbody id="ablaufdatenTbody">
+        @if (Model.Ablaufdaten != null && Model.Ablaufdaten.Count > 0)
+        {
+            @foreach (var a in Model.Ablaufdaten)
+            {
+                <tr class="a-row-view" data-id="@a.Id">
+                    <td class="a-actions"></td>
+                    <td>@a.EintragAmVom?.ToString("dd.MM.yyyy")</td>
+                    <td>@a.EintragVon</td>
+                    <td>@a.AktionAm?.ToString("dd.MM.yyyy")</td>
+                    <td>@a.AktionTyp</td>
+                    <td>@a.Bemerkung</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr class="" id="aEmptyRow">
+                <td colspan="6" style="text-align:center;">Keine Ablaufdaten vorhanden</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="pagination-container">
+    <div class="pagination-buttons">
+        @{ bool isEmpty = Model.TotalPages == 0; }
+        <button class="p-btn" onclick="loadAblaufdatenPage(1)"
+            @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-left"></i>
+        </button>
+        <button class="p-btn" onclick="loadAblaufdatenPage(@(Model.CurrentPage - 1))"
+            @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-left"></i>
+        </button>
+        <div class="pagination-page-info">
+            <input id="aCurrentPage" type="number" min="1"
+                max="@Model.TotalPages" value="@Model.CurrentPage"
+                @(isEmpty ? "disabled" : "") />
+            <span class="pagination-sep">von</span>
+            <span class="pagination-total">@Model.TotalPages</span>
+        </div>
+        <button class="p-btn" onclick="loadAblaufdatenPage(@(Model.CurrentPage + 1))"
+            @(Model.CurrentPage >= Model.TotalPages || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-right"></i>
+        </button>
+        <button class="p-btn" onclick="loadAblaufdatenPage(@Model.TotalPages)"
+            @(Model.CurrentPage >= Model.TotalPages || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-right"></i>
+        </button>
+    </div>
+    <div class="page-size">
+        <label class="pagination-label">Einträge pro Seite</label>
+        <select id="aPageSizeSelect" class="pagination-select">
+            @foreach (var size in new[] { 1, 5, 10, 25, 50, 100 })
+            {
+                var selected = Model.PageSize == size ? "selected" : "";
+                @:<option value="@size" @selected>@size</option>
+            }
+        </select>
+    </div>
+    <div class="actions2">
+        <span class="pagination-label">Gesamt</span>
+        <input class="pagination-count-input" value="@Model.TotalCount" readonly />
+        <button id="aResetBtn" class="p-btn" title="Aktualisieren">
+            <i class="fa fa-sync"></i>
+        </button>
+        <button class="p-btn" onclick="loadAblaufdatenPage(1)" title="Suchen">
+            <i class="fa fa-search"></i>
+        </button>
+    </div>
+</div>

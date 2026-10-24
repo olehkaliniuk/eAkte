@@ -1,0 +1,147 @@
+﻿/* ============================================================
+   DRAG AND DROP STYLES.
+   ============================================================ */
+#drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    background: var(--color-bg-second);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: 4px 10px;
+    font-size: 13px;
+    color: var(--color-text);
+    white-space: nowrap;
+    display: none;
+    box-shadow: var(--box-shadows);
+}
+
+.drag-source-active {
+    outline: 2px dashed var(--color-accent);
+    border-radius: var(--radius-sm);
+}
+
+#drag-source-frame {
+    position: fixed;
+    display: none;
+    pointer-events: none; /* damit elementFromPoint die Rahmen-Box ignoriert */
+    outline: 2px dashed var(--color-accent);
+    border-radius: var(--radius-sm);
+    z-index: 9998;
+}
+
+.drag-target-valid {
+    background: var(--blue-bg);
+    border-radius: var(--radius-md);
+    outline: 2px solid var(--blue-bg);
+}
+
+.drag-target-invalid {
+    background: var(--color-red-bg);
+    border-radius: var(--radius-md);
+    outline: 2px solid var(--color-red-bg);
+}
+
+
+
+/* ============================================================
+   CLIPBOARD MODAL STYLES.
+   ============================================================ */
+.clipboard-modal {
+    position: fixed;
+    bottom: 60px;
+    right: 5px;
+    min-width: 240px;
+    max-width: 320px;
+    max-height: 260px;
+    background: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--box-shadows-hoover);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(12px);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+    .clipboard-modal.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+.clipboard-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--info-lines);
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.clipboard-modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.clipboard-modal-count {
+    color: var(--color-text-small);
+    font-weight: 400;
+    font-size: 0.85em;
+}
+
+button.clipboard-clear-btn {
+    background-color: transparent;
+    border: transparent;
+    box-shadow: none;
+}
+
+.clipboard-modal-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+.clipboard-modal-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 14px;
+    color: var(--color-text);
+    font-size: 0.9em;
+}
+
+.clipboard-modal-item-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.clipboard-modal-item-remove {
+    flex-shrink: 0;
+    background-color: transparent;
+    border: transparent;
+    box-shadow: none;
+    padding: 2px 4px;
+    color: var(--color-text-small);
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+    .clipboard-modal-item-remove:hover {
+        color: var(--color-danger, #d33);
+    }
+
+.clipboard-modal-list::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+}
+
+    .clipboard-modal-list::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hoover);
+    }

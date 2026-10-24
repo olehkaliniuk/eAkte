@@ -1,0 +1,145 @@
+﻿<div id="fileModalDokument" class="file-modal" style="display:none;">
+
+    <!-- Gebundener Ordner -->
+    <input hidden id="modalDokumentParentObjectId" value="@ViewBag.ParentObjectId" />
+    <input hidden id="modalDokumentMode" value="@ViewBag.Mode" />
+
+    <div class="modal-header" id="modalHeader">
+        <div class="modal-header-title">
+            <i class="fa-solid fa-file-lines"></i>
+            [eAkte] @(((string)ViewBag.Mode)?.Trim().ToLower() == "edit" ? "Bearbeiten" : "Erstellen") eines Dokuments
+        </div>
+        <button class="modal-close-btn" onclick="closeModalDokument()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="action-header">
+        <h2>@(((string)ViewBag.Mode)?.Trim().ToLower() == "edit" ? "Bearbeiten" : "Erstellen") eines Dokuments (eAkte)</h2>
+        <div class="action-header-meta">
+            <span class="meta-chip">
+                <i class="fa-solid fa-id-badge"></i>
+                Aktenzeichen: <strong id="dokHeaderAktenzeichen">@ViewBag.Aktenzeichen</strong>
+            </span>
+            <span class="meta-chip">
+                <i class="fa-solid fa-folder" style="color: @ViewBag.ParentColorHex"></i>
+                Eltern-Ordner: <strong id="dokHeaderOrdner">@ViewBag.ParentName</strong>
+            </span>
+        </div>
+    </div>
+
+    <div class="modal-body">
+        <div id="dok-tab-process" class="tab-panel active">
+
+            <!-- Aktionsleiste -->
+            <div class="create-akte-btn-container">
+
+                <div class="status-box" id="nameErrorBox">
+                    <i class="fa-solid fa-circle-exclamation icon-error" id="nameErrorIcon" style="margin-top: 3px"></i>
+                    <span id="nameErrorText"></span>
+                </div>
+
+                @if (((string)ViewBag.Mode)?.Trim().ToLower() == "edit")
+                {
+                    <button class="akte-btn akte-btn-secondary" onclick="saveDokument()">
+                        <i class="fa-solid fa-floppy-disk"></i> Speichern
+                    </button>
+                }
+                else
+                {
+                    <button class="akte-btn akte-btn-secondary" onclick="saveDokument()">
+                        <i class="fa-solid fa-arrow-right"></i> Erstellen
+                    </button>
+                }
+            </div>
+
+            <!-- Übergeordneter Ordner (read-only Referenz) -->
+            <p class="section-label">Übergeordneter Ordner</p>
+            <div class="ordner-ref-chip">
+                <span class="ordner-ref-dot" style="background: @ViewBag.ParentColorHex"></span>
+                <span class="ordner-ref-name">@ViewBag.ParentName</span>
+                <span class="ordner-ref-az">@ViewBag.Aktenzeichen</span>
+            </div>
+
+
+            @if (((string)ViewBag.Mode)?.Trim().ToLower() == "create")
+            {
+                <!-- Zusätzliche Metadaten nur beim Erstellen -->
+                <p class="section-label" style="margin-top: 1em;">Zusätzliche Angaben</p>
+                <div class="field-group">
+                    <div class="field-wrapper">
+                        <label class="field-label">Betreff</label>
+                        <input class="modal-input"
+                               id="dokSubject"
+                               placeholder="Betreff eingeben..." />
+                    </div>
+
+                    <div class="field-wrapper">
+                        <label class="field-label">Gegenstand</label>
+                        <input class="modal-input"
+                               id="dokGegenstand"
+                               placeholder="Gegenstand eingeben..." />
+                    </div>
+                </div>
+            }
+
+            <!-- Bemerkungen: sowohl bei Create als auch bei Edit sichtbar -->
+            <p class="section-label" style="margin-top: 18px;">Versionsangaben</p>
+            <div class="field-group">
+                <div class="field-wrapper">
+                    <label class="field-label">Beschreibung</label>
+                    <input class="modal-input"
+                           id="dokDescription"
+                           placeholder="Kurze Beschreibung der Version..." />
+                </div>
+
+                <div class="field-wrapper">
+                    <label class="field-label">Bemerkungen</label>
+                    <textarea class="modal-input"
+                              id="dokBemerkungen"
+                              rows="3"
+                              placeholder="Bemerkungen zu dieser Version..."></textarea>
+                </div>
+            </div>
+
+            <!-- Drop-Zone -->
+            <p class="section-label" style="margin-top: 18px;">Dokument hochladen</p>
+            <div class="dok-drop-zone" id="dokDropZone">
+
+                <!-- verstecktes File-Input über die gesamte Drop-Fläche -->
+                <input type="file"
+                       id="dokFileInput"
+                       class="dok-file-input"
+                       accept="*/*"
+                       onchange="onDokFileSelected(this)" />
+
+                <!-- Leerer Zustand -->
+                <div class="dok-empty-state" id="dokEmptyState">
+                    <i class="fa-solid fa-cloud-arrow-up dok-drop-icon"></i>
+                    <span class="dok-drop-title">Datei hier ablegen</span>
+                    <span class="dok-drop-sub">
+                        Ziehen Sie eine Datei hierher oder klicken Sie zum Durchsuchen.<br />
+                        PDF, DOCX, XLSX, JPG und weitere Formate werden unterstützt.
+                    </span>
+                    <span class="dok-browse-link">Datei auswählen</span>
+                </div>
+
+                <!-- Vorschau nach Auswahl -->
+                <div class="dok-file-preview" id="dokFilePreview" style="display:none;">
+                    <i class="fa-solid fa-file-circle-check dok-drop-icon dok-icon-success"></i>
+                    <span class="dok-preview-name" id="dokFileName"></span>
+                    <span class="dok-preview-size" id="dokFileSize"></span>
+                    <button class="dok-remove-link"
+                            type="button"
+                            style="position:relative; z-index:10; pointer-events:all;"
+                            onclick="event.stopPropagation(); clearDokFile();">
+                        Entfernen
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+

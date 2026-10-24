@@ -1,0 +1,391 @@
+﻿@using Microsoft.AspNetCore.Html
+@using System.Text.Encodings.Web
+@using EAktePrototypProjektNewMvc.Models
+@model EAktePrototypProjektNewMvc.Models.Nebengruppen.NebengruppeViewModel
+
+@functions{
+    public IHtmlContent SortHeader(string column, string title, string currentColumn, string currentDirection)
+    {
+        var arrowHtml = "";
+        if (currentColumn == column)
+        {
+            arrowHtml = currentDirection == "asc"
+                ? " <span class=\"sort-arrow sort-asc\">▲</span>"
+                : " <span class=\"sort-arrow sort-desc\">▼</span>";
+        }
+
+        // Titel kommt aus der DB, deshalb encodieren.
+        var safeTitle = HtmlEncoder.Default.Encode(title ?? "");
+        return new HtmlString(
+            $"<th onclick=\"sortTable('{column}')\" style=\"cursor:pointer;\">{safeTitle}{arrowHtml}</th>"
+        );
+    }
+
+    string GetSearchValue(string key) => key switch
+    {
+        "Bezeichnung"                  => Model.Search.Bezeichnung,
+        "Kuerzel"                      => Model.Search.Kuerzel,
+        "GehoertZuKategorieNummer"     => Model.Search.GehoertZuKategorieNummer?.ToString(),
+        "GehoertZuHauptgruppeNummer"   => Model.Search.GehoertZuHauptgruppeNummer?.ToString(),
+        "NebengruppeNummer"            => Model.Search.NebengruppeNummer?.ToString(),
+        _ => ""
+    };
+}
+
+<input type="hidden" id="currentSortColumn" value="@Model.SortColumn" />
+<input type="hidden" id="currentSortDirection" value="@Model.SortDirection" />
+<input type="hidden" id="currentNodeType" value="Nebengruppe" />
+
+<input type="hidden" id="parentObjectId" value="@Model.Hauptgruppe.ObjektId" />
+
+<div class="object-container">
+    <div class="object-container-inner">
+        <div class="info-header">
+        <h2>
+            @if (Model.Hauptgruppe.Icon != null && Model.Hauptgruppe.Icon.Length > 0)
+            {
+                var base64 = Convert.ToBase64String(Model.Hauptgruppe.Icon);
+                var imgSrc = $"data:image/x-icon;base64,{base64}";
+
+                <img src="@imgSrc" style="width:1em;" />
+            }
+            else
+            {
+                <span class="toggle-icon">
+                    <i class="fa-solid fa-folder"></i>
+                </span>
+            }
+            @Model.Hauptgruppe.Bezeichnung
+        </h2>
+        <i class="fa-solid fa-circle-info btn-info-table" title="Info zu @Model.Hauptgruppe.Bezeichnung" onclick="toggleInfo('@Model.Hauptgruppe.ObjektId', event)"></i>
+        </div>
+
+
+            <!-- Info -->
+            <div id="info-@Model.Hauptgruppe.ObjektId" class="info-row" style="display:none;">
+
+                  <div class="info-content">
+
+                    <div class="info-item">
+                        <span class="info-label">Objekt-Typ:</span>
+                        <span class="info-value">Hauptgruppe</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Bezeichnung:</span>
+                        <span class="info-value">@Model.Hauptgruppe.Bezeichnung</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Kürzel:</span>
+                        <span class="info-value">@Model.Hauptgruppe.Kuerzel</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Kategorienummer:</span>
+                        <span class="info-value">@Model.Hauptgruppe.GehoertZuKategorieNummer</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Hauptgruppenummer:</span>
+                        <span class="info-value">@Model.Hauptgruppe.HauptgruppeNummer</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Objekt-Id:</span>
+                        <span class="info-value">
+                            <a href="@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@Model.Hauptgruppe.ObjektId">@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@Model.Hauptgruppe.ObjektId</a>
+                        </span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Beschreibung:</span>
+                        <span class="info-value">@Model.Hauptgruppe.Beschreibung</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">LaufenderAktenzeichenZaehler:</span>
+                        <span class="info-value">@Model.Hauptgruppe.LaufenderAktenzeichenZaehler</span>
+                    </div>
+
+                </div>
+            </div>
+
+    </div>
+</div>
+
+
+
+
+<div class="hierarchy-table">
+<div class="table-container">
+    <div class="table-container-inner">
+        <h2 class="table-header-text">Nebengruppen von <span>@Model.Hauptgruppe.Bezeichnung</span></h2>
+        <table>
+            <thead>
+                <tr class="search">
+                    <th></th>
+                    @foreach (var col in Model.Columns)
+                    {
+                        <th>
+                            @if (col.IsSearchable)
+                            {
+                                <input data-search-column="@col.ColumnKey" name="search"
+                                       value="@GetSearchValue(col.ColumnKey)" placeholder="Suchen.." />
+                            }
+                        </th>
+                    }
+                </tr>
+                <tr>
+                    <th>Aktionen</th>
+                    @foreach (var col in Model.Columns)
+                    {
+                        if (col.IsSortable)
+                        {
+                            @SortHeader(col.ColumnKey, col.Title, Model.SortColumn, Model.SortDirection)
+                        }
+                        else
+                        {
+                            <th>@col.Title</th>
+                        }
+                    }
+                </tr>
+            </thead>
+            <tbody class="scrollbody">
+                 @if (Model.Nebengruppen != null && Model.Nebengruppen.Count > 0)
+                 {
+                    @foreach (var n in Model.Nebengruppen)
+                    {
+                        <tr class="js-table-node" data-object-id="@n.ObjektId" data-node-type="Nebengruppe">
+                            <td>
+                               <i class="fa-solid fa-circle-info btn-info-table" title="Info zu @n.Bezeichnung" onclick="toggleInfo('@n.ObjektId', event)"></i>
+                               <i class="fa-solid fa-circle-chevron-right btn-info-table weiter-btn" title="Klicken um eine eben tiefer zu navigieren." style="margin-left:5px"></i>
+                            </td>
+
+                            @foreach (var col in Model.Columns)
+                            {
+                                switch (col.ColumnKey)
+                                {
+                                    case "Bezeichnung":
+                                        <td>
+                                            @if (n.Icon != null && n.Icon.Length > 0)
+                                            {
+                                                <img src="data:image/x-icon;base64,@Convert.ToBase64String(n.Icon)" style="width:1em;" />
+                                            }
+                                            else
+                                            {
+                                                <span class="toggle-icon"><i class="fa-solid fa-folder"></i></span>
+                                            }
+                                            @n.Bezeichnung
+                                        </td>
+                                        break;
+                                    case "Kuerzel":
+                                        <td>@n.Kuerzel</td>
+                                        break;
+                                    case "GehoertZuKategorieNummer":
+                                        <td>@n.GehoertZuKategorieNummer</td>
+                                        break;
+                                    case "GehoertZuHauptgruppeNummer":
+                                        <td>@n.GehoertZuHauptgruppeNummer</td>
+                                        break;
+                                    case "NebengruppeNummer":
+                                        <td>@n.NebengruppeNummer</td>
+                                        break;
+                                    default:
+                                        <td></td>
+                                        break;
+                                }
+                            }
+                        </tr>
+
+                         <!-- Info -->
+                        <tr id="info-@n.ObjektId" class="info-row" style="display:none;">
+                            <td colspan="@(Model.Columns.Count + 1)">
+                              <div class="info-content">
+
+                                    <div class="info-item">
+                                        <span class="info-label">Objekt-Typ:</span>
+                                        <span class="info-value">Nebengruppe</span>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <span class="info-label">Objekt-Id:</span>
+                                        <span class="info-value">
+                                            <a href="@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@n.ObjektId">@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@n.ObjektId</a>
+                                        </span>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <span class="info-label">Beschreibung:</span>
+                                        <span class="info-value">@n.Beschreibung</span>
+                                    </div>
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                     <tr><td colspan="@(Model.Columns.Count + 1)" style="text-align:center;">Keine Einträge gefunden</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<div class="pagination-container">
+
+    <div class="pagination-buttons">
+        @{ bool isEmpty = Model.TotalPages == 0; }
+
+        <button class="p-btn" onclick="loadPage(1)"
+            @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-left"></i>
+        </button>
+        <button class="p-btn" onclick="loadPage(@(Model.CurrentPage - 1))"
+            @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-left"></i>
+        </button>
+
+        <div class="pagination-page-info">
+            <input id="currentPage" type="number" min="1"
+                max="@Model.TotalPages" value="@Model.CurrentPage"
+                @(isEmpty ? "disabled" : "") />
+            <span class="pagination-sep">von</span>
+            <span class="pagination-total">@Model.TotalPages</span>
+        </div>
+
+        <button class="p-btn" onclick="loadPage(@(Model.CurrentPage + 1))"
+            @(Model.CurrentPage >= Model.TotalPages || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-right"></i>
+        </button>
+        <button class="p-btn" onclick="loadPage(@Model.TotalPages)"
+            @(Model.CurrentPage >= Model.TotalPages || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-right"></i>
+        </button>
+    </div>
+
+    <!-- Einträge pro Seite -->
+    <div class="page-size">
+        <label class="pagination-label">Einträge pro Seite</label>
+        <select id="pageSizeSelect" class="pagination-select">
+            @foreach (var size in new[] { 1, 5, 10, 25, 50, 100 })
+            {
+                var selected = Model.PageSize == size ? "selected" : "";
+                @:<option value="@size" @selected>@size</option>
+            }
+        </select>
+    </div>
+
+    <!-- Gesamtanzahl + Actions -->
+    <div class="actions2">
+        <span class="pagination-label">Gesamt</span>
+        <input class="pagination-count-input" name="name" value="@Model.TotalCount" readonly />
+        <button id="resetBtn" class="p-btn" title="Aktualisieren">
+            <i class="fa fa-sync"></i>
+        </button>
+        <button class="p-btn" title="Spalten anpassen" onclick="openColumnDialog('Nebengruppe')">
+            <i class="fa-solid fa-table-columns"></i>
+        </button>
+        <button class="p-btn" onclick="loadPage(1)" title="Suchen">
+            <i class="fa fa-search"></i>
+        </button>
+    </div>
+
+</div>
+</div>
+
+
+<script>
+(function () {
+
+const endpoint = "/bescheidbearbeitung/load-nebengruppen";
+const tableContainer = () => document.getElementById("tableContainer");
+
+function getValue(id, fallback = "") {
+    return document.getElementById(id)?.value ?? fallback;
+}
+
+function getFilters() {
+    const filters = {
+        pageSize: getValue("pageSizeSelect", 10),
+        // Parent-ObjectId (Hauptgruppe), keine Tabellenspalte.
+        objectId: getValue("parentObjectId")
+    };
+    document.querySelectorAll("[data-search-column]").forEach(i => {
+        filters[i.dataset.searchColumn] = i.value;
+    });
+    return filters;
+}
+
+function fetchTable(params) {
+    const query = new URLSearchParams(params);
+    fetch(`${endpoint}?${query}`)
+        .then(r => r.text())
+        .then(html => {
+            tableContainer().innerHTML = html;
+            attachEvents();
+        });
+}
+
+window.loadPage = function (page = 1) {
+    fetchTable({ ...getFilters(), page });
+};
+
+window.sortTable = function (column) {
+    const currentColumn = getValue("currentSortColumn");
+    const currentDirection = getValue("currentSortDirection", "asc");
+
+    const newDirection =
+        currentColumn === column && currentDirection === "asc"
+            ? "desc"
+            : "asc";
+
+    fetchTable({
+        ...getFilters(),
+        page: 1,
+        sortColumn: column,
+        sortDirection: newDirection
+    });
+};
+
+function attachEvents() {
+
+    const searchInputs = () => document.querySelectorAll("[data-search-column]");
+
+    searchInputs().forEach(input =>
+        input.addEventListener("keypress", e => {
+            if (e.key === "Enter") window.loadPage(1);
+        })
+    );
+
+    document.getElementById("pageSizeSelect")
+        ?.addEventListener("change", () => window.loadPage(1));
+
+    document.getElementById("currentPage")
+        ?.addEventListener("input", e => {
+            const page = parseInt(e.target.value, 10);
+            const max = parseInt(e.target.max, 10);
+
+            if (!isNaN(page)) {
+                if (page < 1) return e.target.value = 1;
+                if (page > max) return e.target.value = max;
+                window.loadPage(page);
+            }
+        });
+
+    document.getElementById("resetBtn")
+        ?.addEventListener("click", () => {
+            searchInputs().forEach(i => i.value = "");
+            document.getElementById("pageSizeSelect").value = 10;
+            window.loadPage(1);
+        });
+}
+
+attachEvents();
+
+})();
+</script>

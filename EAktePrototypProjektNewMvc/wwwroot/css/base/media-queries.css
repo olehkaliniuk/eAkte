@@ -1,0 +1,14 @@
+﻿/* ============================================================
+   MEDIA QUERIES
+   ============================================================ */
+@media (max-width: 1920px) {
+    .path-search-btn-container {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    tbody td, thead th {
+        padding: 5px 8px;
+    }
+}

@@ -1,0 +1,319 @@
+﻿@using EAktePrototypProjektNewMvc.Models.Gebuehre
+@model List<GebuehrMitTitelViewModel>
+
+@functions {
+    private static readonly System.Globalization.CultureInfo De = new System.Globalization.CultureInfo("de-DE");
+
+    // Wandelt den Status-Buchstaben aus der DB in einen lesbaren Text um.
+    private static string StatusText(string? status)
+    {
+        return status?.Trim().ToUpperInvariant() switch
+        {
+            "A" => "angelegt",
+            "Z" => "zur Unterschrift gegeben",
+            "V" => "unterschrieben",
+            "K" => "kassenwirksam",
+            "T" => "angezahlt",
+            "O" => "überzahlt",
+            "B" => "vollständig bezahlt",
+            "X" => "STORNIERUNG angewiesen",
+            "S" => "STORNIERT",
+            null or "" => string.Empty,
+            _ => status
+        };
+    }
+
+    // Ist die Gebühr eine Vorschussforderung? (ANNAHME: Typ enthält "Vorschuss" oder ist "V")
+    private static bool IstVorschuss(string? typ)
+    {
+        var t = typ?.Trim() ?? string.Empty;
+        return t.Contains("Vorschuss", StringComparison.OrdinalIgnoreCase)
+               || t.Equals("V", StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Titel-Bezeichnung zur TitelNr (in GebuehrTitel gibt es keine Bezeichnung).
+    private static string TitelName(string? titelNr)
+    {
+        return titelNr?.Trim() switch
+        {
+            "11106" => "Gebühr",
+            "28102" => "Reisekosten",
+            "28191" => "Auslagen für Gutachten u.ä.",
+            "281917" => "Kosten für externe Übersetzungsleistungen",
+            _ => string.Empty
+        };
+    }
+
+    // Bezahlter Vorschuss (BetragBezahlt) aller nicht stornierten Vorschussforderungen für eine TitelNr.
+    private static decimal VorschussBezahltFuerTitel(List<GebuehrMitTitelViewModel> alle, string? titelNr)
+    {
+        return alle.Where(x => IstVorschuss(x.Gebuehr.Typ) && !string.Equals(x.Gebuehr.Status?.Trim(), "S", StringComparison.OrdinalIgnoreCase))
+                   .SelectMany(x => x.Titel)
+                   .Where(t => t.TitelNr == titelNr)
+                   .Sum(t => t.BetragBezahlt ?? 0m);
+    }
+
+    private static string Euro(decimal wert) => wert.ToString("N2", De) + " €";
+}
+
+
+
+<table class="modal-table" id="gebuehrenTable">
+    <colgroup>
+        <col class="col-arrow">
+        <col class="col-icon">
+        <col class="col-nr">
+        <col class="col-kz">
+        <col class="col-type">
+        <col>
+    </colgroup>
+    <thead>
+        <tr>
+            <th></th>
+            <th></th>
+            <th>LfdNr</th>
+            <th>Kassenzeichen</th>
+            <th>Typ</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+
+    @foreach (var item in Model ?? new List<GebuehrMitTitelViewModel>())
+    {
+        <tbody class="entry">
+            <tr class="main-row"
+                data-lfdnr="@item.Gebuehr.LfdNr" data-typ="@item.Gebuehr.Typ" data-status="@item.Gebuehr.Status"
+                data-tarif="@item.Gebuehr.Tarifstelle" data-ermittlung="@item.Gebuehr.Ermittlung"
+                data-bemerkung="@item.Gebuehr.Bemerkung" data-iban="@item.Gebuehr.IBAN" data-bic="@item.Gebuehr.BIC"
+                data-gebuehr="@(item.Titel.Sum(x => x.Betrag ?? 0m).ToString("N2", De))"
+                data-gezahlt="@(item.Titel.Sum(x => x.BetragBezahlt ?? 0m).ToString("N2", De))"
+                data-gezahltam="@item.Gebuehr.GebuehrGezahltAm?.ToString("dd.MM.yyyy HH:mm:ss")"
+                data-beantragt="@item.Gebuehr.BeantragtAm?.ToString("dd.MM.yyyy HH:mm:ss")"
+                data-angelegtvon="@item.Gebuehr.AngelegtVon"
+                data-angelegtam="@item.Gebuehr.AngelegtAm?.ToString("dd.MM.yyyy HH:mm:ss")"
+                data-geaendertvon="@item.Gebuehr.GeaendertVon"
+                data-geaendertam="@item.Gebuehr.GeaendertAm?.ToString("dd.MM.yyyy HH:mm:ss")"
+                data-annahmevom="@item.Gebuehr.AnnahmeanordnungVom?.ToString("dd.MM.yyyy HH:mm:ss")"
+                data-bescheidvom="@item.Gebuehr.GebuehrenbescheidVom?.ToString("dd.MM.yyyy HH:mm:ss")"
+                data-storniertam="@item.Gebuehr.StorniertAm?.ToString("dd.MM.yyyy HH:mm:ss")"
+                data-kassenwirksamam="@item.Gebuehr.KassenwirksamAm?.ToString("dd.MM.yyyy HH:mm:ss")">
+
+                <td class="arrow-cell"></td>
+                <td class="icon-cell">
+                    <svg class="icon-lupe" viewBox="0 0 18 18"><circle cx="7" cy="7" r="5" stroke-width="1.6" /><line x1="11" y1="11" x2="16" y2="16" stroke-width="2.4" stroke-linecap="round" /></svg>
+                    <svg class="icon-stift" viewBox="0 0 18 18"><path d="M3 15l.7-3.6L12.4 2.7a1.5 1.5 0 0 1 2.1 0l.8.8a1.5 1.5 0 0 1 0 2.1L6.6 14.3 3 15z" stroke-width="1.6" stroke-linejoin="round" /></svg>
+                </td>
+                <td>@item.Gebuehr.LfdNr</td>
+                <td>@item.Gebuehr.Kassenzeichen</td>
+                <td>@item.Gebuehr.Typ</td>
+                <td>@StatusText(item.Gebuehr.Status)</td>
+            </tr>
+            <tr class="detail-row">
+                <td class="arrow-cell"></td>
+                <td class="detail-cell" colspan="5">
+                    <div class="detail-wrap">
+                        <table class="sub">
+                            <colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c4"><col></colgroup>
+                            <thead>
+                                <tr>
+                                    <th>TitelNr</th>
+                                    <th>Titel</th>
+                                    <th>Gebühr gefordert</th>
+                                    <th>@(IstVorschuss(item.Gebuehr.Typ) ? "Vorschuss gefordert" : "Vorschuss bezahlt")</th>
+                                    <th class="test-col" title="Testfeld: nur zur Kontrolle der Berechnung">Betrag bezahlt</th>
+                                    <th>offener Betrag</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var t in item.Titel)
+                                {
+                                    var betrag = t.Betrag ?? 0m;
+                                    var bezahlt = t.BetragBezahlt ?? 0m;
+                                    var istVorschuss = IstVorschuss(item.Gebuehr.Typ);
+
+                                    decimal gebuehrGefordert, vorschussGefordert, offen;
+
+                                    if (istVorschuss)
+                                    {
+                                        gebuehrGefordert = 0m;
+                                        vorschussGefordert = betrag;
+                                        offen = vorschussGefordert - bezahlt;
+                                    }
+                                    else
+                                    {
+                                        gebuehrGefordert = betrag;
+                                        vorschussGefordert = VorschussBezahltFuerTitel(Model!, t.TitelNr);   // Vorschuss bezahlt
+                                        offen = gebuehrGefordert - vorschussGefordert - bezahlt;             // minus Betrag bezahlt der Gebühr selbst
+                                    }
+
+                                    <tr data-titelnr="@t.TitelNr" data-betrag="@betrag.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                        <td>@t.TitelNr</td>
+                                        <td>@TitelName(t.TitelNr)</td>
+                                        <td>@Euro(gebuehrGefordert)</td>
+                                        <td>@Euro(vorschussGefordert)</td>
+                                        <td class="test-col">@Euro(bezahlt)</td>
+                                        <td class="@(!istVorschuss && offen < 0m ? "rueckzahlung" : "")">
+                                            
+                                            @if (!istVorschuss && offen < 0m)
+                                            {
+                                                <span class="rueckzahlung-badge" title="Überzahlt: Auszahlung an den Antragsteller (IBAN/BIC erforderlich)">Rückzahlung</span>
+                                            }
+                                            @Euro(offen)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="mail-row">
+                            <div class="mail-icon">
+                                <svg viewBox="0 0 18 14"><rect x="0.5" y="0.5" width="17" height="13" rx="1" /><path d="M1 1.5 L9 8 L17 1.5" fill="none" stroke-width="1.2" /></svg>
+                            </div>
+                            <div class="mail-text"><a>GebuehrenbescheidAn</a> : @item.Gebuehr.GebuehrenbescheidAn</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    }
+</table>
+
+@* Create *@
+<div id="gNeuPanel" class="g-neu-panel" hidden>
+    <div class="g-neu-head">
+        <span class="g-neu-title" id="gNeuTitelText"></span>
+        <span class="g-neu-actions">
+            <button type="button" class="akte-btn akte-btn-primary" id="gNeuSpeichern">Speichern</button>
+            <button type="button" class="akte-btn" id="gNeuAbbrechen">Abbrechen</button>
+        </span>
+    </div>
+    <table class="g-neu-table">
+        <thead>
+            <tr><th>Titel Nummer und Titel</th><th id="gNeuSpalte"></th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><select disabled><option>11106 Gebühr</option></select></td>
+                <td><input class="g-betrag" data-titel="11106" inputmode="decimal" placeholder="0,00"> €</td>
+            </tr>
+            <tr>
+                <td><select disabled><option>28102 Reisekosten</option></select></td>
+                <td><input class="g-betrag" data-titel="28102" inputmode="decimal" placeholder="0,00"> €</td>
+            </tr>
+            <tr>
+                <td>
+                    <select id="gNeuTitel3">
+                        <option value="">– bitte wählen –</option>
+                        <option value="28191">28191 Auslagen für Gutachten u.ä.</option>
+                        <option value="281917">281917 Kosten für externe Übersetzungsleistungen</option>
+                    </select>
+                </td>
+                <td><input class="g-betrag" id="gNeuBetrag3" inputmode="decimal" placeholder="0,00"> €</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="g-neu-felder">
+        <label>Tarifstelle <input id="gNeuTarif"></label>
+        <label>Ermittlung <textarea id="gNeuErmittlung" rows="3"></textarea></label>
+        <label>Bemerkung <textarea id="gNeuBemerkung" rows="3"></textarea></label>
+        <div class="g-neu-iban" style="display:none">
+            <label>IBAN <input id="gNeuIban"></label>
+            <label>BIC <input id="gNeuBic"></label>
+        </div>
+    </div>
+</div>
+
+@* Edit *@
+<div id="gEditPanel" class="g-neu-panel" hidden>
+    <div class="g-neu-head">
+        <span class="g-neu-title" id="gEditTitelText"></span>
+        <span class="g-neu-actions">
+            <button type="button" class="akte-btn akte-btn-primary" id="gEditSpeichern">Speichern</button>
+            <button type="button" class="akte-btn" id="gEditAbbrechen">Abbrechen</button>
+        </span>
+    </div>
+    <table class="g-neu-table">
+        <thead><tr><th>Titel Nummer und Titel</th><th id="gEditSpalte"></th></tr></thead>
+        <tbody>
+            <tr>
+                <td><select disabled><option>11106 Gebühr</option></select></td>
+                <td><input class="g-betrag" id="gEditBetrag1" data-titel="11106" inputmode="decimal" placeholder="0,00"> €</td>
+            </tr>
+            <tr>
+                <td><select disabled><option>28102 Reisekosten</option></select></td>
+                <td><input class="g-betrag" id="gEditBetrag2" data-titel="28102" inputmode="decimal" placeholder="0,00"> €</td>
+            </tr>
+            <tr>
+                <td>
+                    <select id="gEditTitel3">
+                        <option value="">– bitte wählen –</option>
+                        <option value="28191">28191 Auslagen für Gutachten u.ä.</option>
+                        <option value="281917">281917 Kosten für externe Übersetzungsleistungen</option>
+                    </select>
+                </td>
+                <td><input class="g-betrag" id="gEditBetrag3" inputmode="decimal" placeholder="0,00"> €</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="g-edit-body">
+        <div class="g-neu-felder">
+            <label>Tarifstelle <input id="gEditTarif"></label>
+            <label>Ermittlung <textarea id="gEditErmittlung" rows="3"></textarea></label>
+            <label>Bemerkung <textarea id="gEditBemerkung" rows="3"></textarea></label>
+            <div class="g-neu-iban">
+                <label>IBAN <input id="gEditIban"></label>
+                <label>BIC <input id="gEditBic"></label>
+            </div>
+        </div>
+        <div class="g-info">
+            <div><small>Gebühr</small><span id="gInfoGebuehr"></span></div>
+            <div><small>Angelegt von</small><span id="gInfoAngelegtVon"></span></div>
+            <div><small>Gezahlte Gebühr</small><span id="gInfoGezahlt"></span></div>
+            <div><small>Angelegt am</small><span id="gInfoAngelegtAm"></span></div>
+            <div><small>Gebühr gezahlt am</small><span id="gInfoGezahltAm"></span></div>
+            <div><small>Geändert von</small><span id="gInfoGeaendertVon"></span></div>
+            <div><small>Beantragt am</small><span id="gInfoBeantragt"></span></div>
+            <div><small>Geändert am</small><span id="gInfoGeaendertAm"></span></div>
+        </div>
+    </div>
+</div>
+
+@* status anpassen *@
+<div id="gStatusPanel" class="g-neu-panel" hidden>
+    <div class="g-neu-head">
+        <span class="g-neu-title" id="gStatusTitelText"></span>
+        <span class="g-neu-actions">
+            <button type="button" class="akte-btn akte-btn-primary" id="gStatusSpeichern">Speichern</button>
+            <button type="button" class="akte-btn" id="gStatusAbbrechen">Abbrechen</button>
+        </span>
+    </div>
+    <div class="g-neu-felder">
+        <label>
+            Status
+            <select id="gStatusAuswahl">
+                <option value="A">angelegt</option>
+                <option value="Z">zur Unterschrift gegeben</option>
+                <option value="V">unterschrieben</option>
+                <option value="K">kassenwirksam</option>
+                <option value="T">angezahlt</option>
+                <option value="O">überzahlt</option>
+                <option value="B">vollständig bezahlt</option>
+                <option value="X">STORNIERUNG angewiesen</option>
+                <option value="S">STORNIERT</option>
+            </select>
+        </label>
+    </div>
+</div>
+
+
+<div class="g-fuss">
+    <div class="g-fuss-spalte">
+        <div>LfdNr: <span id="gFussLfdNr"></span></div>
+        <div>Annahmeanordnung vom: <span id="gFussAnnahme"></span></div>
+        <div>Gebührenbescheid vom: <span id="gFussBescheid"></span></div>
+    </div>
+    <div class="g-fuss-spalte">
+        <div>&nbsp;</div>
+        <div>Storniert am: <span id="gFussStorniert"></span></div>
+        <div>Kassenwirksam am: <span id="gFussKassenwirksam"></span></div>
+    </div>
+</div>

@@ -1,0 +1,91 @@
+﻿/* ============================================================
+   SETTINGS PANEL — SCHWEBENDE EINSTELLUNGEN RECHTS OBEN.
+   ============================================================ */
+.settings-container {
+    position: fixed;
+    top: calc(6px + var(--header-height)); /* Unterhalb der Kopfzeile. */
+    right: 6px;
+    width: 17.1429rem;
+    padding: 20px;
+    background: var(--color-bg-second);
+    border-radius: 9px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid var(--color-border-lines);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    /* Standardmäßig unsichtbar und nach oben verschoben. */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.97);
+    transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+    z-index: 999;
+}
+
+    /* Sichtbarer Zustand — per JavaScript umgeschaltet. */
+    .settings-container.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+    }
+
+/* Kopfzeile des Einstellungs-Panels. */
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: -0.01em;
+}
+
+/* Einstellungsgruppe mit Beschriftung und Steuerelement. */
+.setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    /* Beschriftung oberhalb des Steuerelements. */
+    .setting-group label {
+        font-size: 0.75rem;
+        color: var(--color-text-small);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 500;
+    }
+
+/* Wrapper für benutzerdefiniertes Dropdown-Pfeil-Design. */
+.select-wrapper {
+    position: relative;
+}
+
+    .select-wrapper select {
+        width: 100%;
+        padding: 8px 32px 8px 10px;
+        border-radius: var(--radius-sm);
+        appearance: none;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+        .select-wrapper select:hover {
+            border-color: var(--color-accent);
+        }
+
+        .select-wrapper select:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(30,90,168,0.12);
+        }
+
+    /* Pfeil-Icon absolut im Wrapper positioniert. */
+    .select-wrapper i {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        font-size: 0.75rem;
+    }

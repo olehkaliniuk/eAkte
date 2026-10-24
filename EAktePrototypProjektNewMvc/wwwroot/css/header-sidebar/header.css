@@ -1,0 +1,259 @@
+﻿/* ============================================================
+   HEADER — FIXIERTE KOPFZEILE AM OBEREN SEITENRAND.
+   ============================================================ */
+header {
+    position: fixed;
+    top: 0;
+    left: 5px;
+    width: calc(100% - 10px);
+    z-index: 100; 
+    background: var(--color-bg-second);
+    border-bottom: 1px solid var(--color-border-lines);
+    box-shadow: 0 1px 8px rgba(0,0,0,0.07); 
+    border-radius: 0 0 9px 9px;
+}
+
+/* Innerer Flex-Container der Kopfzeile. */
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    height: 3rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* ---- Markenbereich ---- */
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5714rem;
+    color: var(--color-accent);
+    font-weight: 700;
+    font-size: 0.9375rem;
+    letter-spacing: -0.02em;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+    .header-brand i {
+        font-size: 0.875rem;
+        opacity: 0.85; 
+    }
+
+/* Markentext in Akzentfarbe. */
+.header-brand-text {
+    color: var(--color-text);
+}
+
+/* ---- Aktionsliste rechts ---- */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.1429rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+    .header-actions li {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0; 
+    }
+
+/* ---- Vertikaler Trenner ---- */
+.header-divider {
+    width: 1px;
+    height: 1.4286rem; /* 20px */
+    background: var(--color-border-lines);
+    margin: 0 6px;
+    flex-shrink: 0;
+}
+
+/* ---- Icon-Schaltflächen (Theme / Reload / Einstellungen) ---- */
+.header-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border: none;
+    background: transparent;
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.8125rem;
+    transition: background 0.15s, color 0.15s;
+    box-shadow: none;
+    padding: 0;
+}
+
+    .header-icon-btn:hover {
+        background: var(--color-bg-second);
+        color: var(--color-accent);
+        box-shadow: none;
+        border: none;
+    }
+
+/* ---- Text-Aktionslinks (Anmelden / Abmelden) ---- */
+.header-action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    color: var(--color-text-small);
+    text-decoration: none;
+    white-space: nowrap; 
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+    .header-action-link:hover {
+        background: var(--color-bg-second);
+        color: var(--color-accent);
+    }
+
+    .header-action-link i {
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+/* Abmelden-Link in Rot. */
+.header-logout {
+    color: var(--color-text-small);
+}
+
+    .header-logout:hover {
+        background: rgba(192,57,43,0.07);
+        color: #c0392b;
+    }
+
+/* ---- Benutzer-Chip ---- */
+.header-user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 20px;
+    border: 1px solid var(--color-border-lines);
+    background: var(--color-bg-second);
+    text-decoration: none;
+    color: var(--color-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition: border-color 0.15s, background 0.15s;
+    max-width: 220px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+    .header-user-chip:hover {
+        border-color: var(--color-accent);
+        background: var(--color-bg);
+    }
+
+/* Runder Avatar mit Initialen. */
+.header-user-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7143rem; /* 24px */
+    height: 1.7143rem; /* 24px */
+    min-width: 1.7143rem; /* 24px */
+    border-radius: 50%;
+    background: var(--color-bg);
+    color: #fff;
+    font-size: 0.625rem;
+    flex-shrink: 0;
+}
+
+/* E-Mail-Text mit Ellipsis bei Überlauf. */
+.header-user-email {
+    cursor: pointer;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+/* Krone für Premium-Benutzer. */
+.header-crown {
+    color: gold;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+}
+
+/* ---- Reload-Animation ---- */
+.rotate {
+    display: inline-block;
+    transition: transform 0.9s ease;
+}
+
+/* Theme-Toggle-Icon-Animation. */
+#iconThemeToggle {
+    transition: transform 0.9s ease;
+}
+
+/* Klasse wird per JavaScript hinzugefügt um Drehung auszulösen. */
+.rotated {
+    transform: rotate(360deg);
+}
+
+
+.admin-mode {
+    border-radius: 999rem;
+    padding: 0.36rem 0.51rem;
+    background-color: transparent;
+    color: var(--color-accent);
+    border: 1px solid var(--color-border-lines);
+}
+
+    .admin-mode:hover {
+        background-color: transparent;
+        border: 1px solid var(--color-accent);
+    }
+
+    .admin-mode.active {
+        background-color: var(--color-accent);
+        border: 1px solid var(--color-accent);
+    }
+
+    .admin-mode i.active {
+        color: var(--color-bg);
+    }
+
+
+.mode-mitzeichnung {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 6px;
+    font-size: 0.8125rem;
+    color: var(--color-accent);
+    background-color: var(--blue-bg);
+    border: 1px solid rgba(37, 99, 235, 0.20);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--box-shadows);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+
+.d-none {
+    display: none !important;
+}
+
+#mandantSelect{
+    margin-right: 10px;
+    border-radius: 999px;
+
+}

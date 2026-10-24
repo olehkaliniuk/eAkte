@@ -1,0 +1,356 @@
+﻿@using EAktePrototypProjektNewMvc.Models
+@model EAktePrototypProjektNewMvc.Models.Dokumente.DokumentViewModel
+
+<input type="hidden" id="currentNodeType" value="Dokument" />
+
+<div class="table-container">
+    <div class="table-container-inner">
+
+
+        @if (Model.Dokument != null)
+        {
+            var aktiv = Model.Dokument.Versionen?.FirstOrDefault(v => v.IsActive);
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:80px;">Aktion</th>
+                        @foreach (var col in Model.Columns)
+                        {
+                            <th>@col.Title</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="js-table-node" data-object-id="@Model.Dokument.ObjektId" data-node-type="Dokument">
+                        <td>
+                            <div class="versions-actions-div">
+                                <i class="fa-solid fa-circle-info btn-info-table"
+                                   onclick="toggleInfo('@Model.Dokument.ObjektId', event)"
+                                   title="Info zu @Model.Dokument.Name"></i>
+                                @if (Model.Dokument?.Versionen != null && Model.Dokument.Versionen.Any())
+                                {
+                                    var aktiveVersion = Model.Dokument.Versionen.FirstOrDefault(v => v.IsActive) ?? Model.Dokument.Versionen.OrderByDescending(x => x.CreatedDate).First();
+                                    <div class="btn-divider" id="btnDividerBack" style="display:flex"></div>
+                                        <i class="fa-solid fa-pen-to-square btn-edit"
+                                           data-version-id="@aktiveVersion.CurrentVersionId"
+                                           data-filename="@(Model.Dokument.Name)@(aktiveVersion.FileExtension)"
+                                           title="Herunterladen &amp; in Word bearbeiten"
+                                           style="cursor:pointer;"></i>
+                                    <!-- Erscheint anstelle der Icons, solange die Bearbeitung läuft -->
+                                    <i class="fa-solid fa-key edit-pending-key"
+                                       data-version-id="@aktiveVersion.CurrentVersionId"
+                                       title="Wird gerade in Word bearbeitet"
+                                       style="display:none; color:#c9a227; cursor:default;">
+                                    </i>
+                                }
+                            </div>
+                        </td>
+                        @foreach (var col in Model.Columns)
+                        {
+                            switch (col.ColumnKey)
+                            {
+                                case "Name":
+                                    <td>
+                                        <i class="fa-solid fa-file" style="color:#6481a5; margin-right:5px;"></i>
+                                        <span class="node-name">@Model.Dokument.Name</span>
+                                        @if (Model.Dokument.IstAusVorlagenverwaltung)
+                                        {
+                                            <span>Vorlagenverwaltung</span>
+                                        }
+                                    </td>
+                                    break;
+                                case "Subject":
+                                    <td>@(Model.Dokument.Subject ?? "-")</td>
+                                    break;
+                                case "Aktenzeichen":
+                                    <td>@Model.Dokument.Aktenzeichen</td>
+                                    break;
+                                case "CreationDate":
+                                    <td>@Model.Dokument.CreationDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                    break;
+                                case "CreatorName":
+                                    <td>@Model.Dokument.CreatorName</td>
+                                    break;
+                                case "ModifyDate":
+                                    <td>@(Model.Dokument.ModifyDate.HasValue? Model.Dokument.ModifyDate.Value.ToString("dd.MM.yyyy HH:mm") : "-")</td>
+                                    break;
+                                case "Modifier":
+                                    <td>@(Model.Dokument.Modifier ?? "-")</td>
+                                    break;
+                                case "VersionNr":
+                                    <td>
+                                        @if (aktiv != null)
+                                        {
+                                            <span class="v-badge v-badge-active">@aktiv.VersionNr</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:var(--color-text-small); font-size:12px;">—</span>
+                                        }
+                                    </td>
+                                    break;
+                                default:
+                                    <td></td>
+                                    break;
+                            }
+                        }
+                    </tr>
+
+                    <tr id="info-@Model.Dokument.ObjektId" class="info-row" style="display:none;">
+                        <td colspan="@(Model.Columns.Count + 1)">
+                            <div class="info-content">
+                                <div class="info-item">
+                                    <span class="info-label">Objekt-Id:</span>
+                                    <span class="info-value">
+                                        <a href="@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@Model.Dokument.ObjektId">@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@Model.Dokument.ObjektId</a>
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Aktenzeichen:</span>
+                                    <span class="info-value">@Model.Dokument.Aktenzeichen</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Betreff:</span>
+                                    <span class="info-value">@(Model.Dokument.Subject ?? "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Antragsteller:</span>
+                                    <span class="info-value">@(Model.Dokument.Antragsteller ?? "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Eigentümer:</span>
+                                    <span class="info-value">@(Model.Dokument.OwnerName ?? "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Änderer:</span>
+                                    <span class="info-value">@(Model.Dokument.Modifier ?? "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Geändert am:</span>
+                                    <span class="info-value">@(Model.Dokument.ModifyDate.HasValue? Model.Dokument.ModifyDate.Value.ToString("dd.MM.yyyy HH:mm") : "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Eingangsdatum:</span>
+                                    <span class="info-value">@(Model.Dokument.Eingangsdatum.HasValue? Model.Dokument.Eingangsdatum.Value.ToString("dd.MM.yyyy") : "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Ausgangsdatum:</span>
+                                    <span class="info-value">@(Model.Dokument.Ausgangsdatum.HasValue? Model.Dokument.Ausgangsdatum.Value.ToString("dd.MM.yyyy") : "-")</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>Kein Dokument vorhanden.</p>
+        }
+    </div>
+</div>
+
+
+@* ── Versionen-Block (separater Container) ── *@
+@if (Model.Dokument?.Versionen != null && Model.Dokument.Versionen.Any())
+{
+    var aktiveVersion = Model.Dokument.Versionen.FirstOrDefault(v => v.IsActive)
+                        ?? Model.Dokument.Versionen.OrderByDescending(x => x.CreatedDate).First();
+    var alleVersionen = Model.Dokument.Versionen.OrderByDescending(x => x.CreatedDate).ToList();
+
+    <div class="table-container versionen-outer-block" id="versionen-block-@Model.Dokument.ObjektId">
+        <div class="table-container-inner">
+            <table class="versionen-sub-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;"></th>
+                        <th>Version</th>
+                        <th>Beschreibung</th>
+                        <th>Dateiendung</th>
+                        <th>Größe</th>
+                        <th>Dokumentdatum</th>
+                        <th>Erstellt am</th>
+                        <th>Erstellt von</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="versionen-body-@Model.Dokument.ObjektId">
+
+                    @* ── Immer sichtbare Zeile: nur aktive Version ── *@
+                    @{
+                        var v0 = aktiveVersion;
+                    }
+                    <tr class="version-active-row versionen-preview-row">
+                        <td>
+                            <div class="versions-actions-div">
+                                <i class="fa-solid fa-circle-info btn-info-table"
+                                   onclick="toggleInfo('v-@v0.CurrentVersionId', event)"
+                                   title="Info"></i>
+
+                                <i class="fa-solid fa-download btn-download"
+                                   data-object-id="@v0.CurrentVersionId"
+                                   title="Herunterladen"
+                                   style="cursor:pointer;">
+                                </i>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="v-badge v-badge-active">@v0.VersionNr</span>
+                        </td>
+                        <td>@(v0.Description ?? "-")</td>
+                        <td>@(v0.FileExtension ?? "-")</td>
+                        <td>@v0.ContentSize</td>
+                        <td>@(v0.Dokumentdatum.HasValue? v0.Dokumentdatum.Value.ToString("dd.MM.yyyy") : "-")</td>
+                        <td>@v0.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@v0.CreatedBy</td>
+                        <td>
+                            @if (v0.IsSigned)
+                            {
+                                <span class="v-status v-status-signed"><i class="fa-solid fa-signature"></i> Signiert</span>
+                            }
+                            @if (v0.Final)
+                            {
+                                <span class="v-status v-status-final"><i class="fa-solid fa-lock"></i> Final</span>
+                            }
+                            @if (v0.IsArchived)
+                            {
+                                <span class="v-status v-status-archived"><i class="fa-solid fa-box-archive"></i> Archiviert</span>
+                            }
+                            @if (!v0.IsSigned && !v0.Final && !v0.IsArchived)
+                            {
+                                <span style="color:var(--color-text-small);font-size:11px;">—</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr id="info-v-@v0.CurrentVersionId" class="info-row" style="display:none;">
+                        <td colspan="9">
+                            <div class="info-content">
+                                <div class="info-item">
+                                    <span class="info-label">Dokument-ID:</span>
+                                    <span class="info-value">@v0.DocumentObjektId</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Bemerkungen:</span>
+                                    <span class="info-value">@(v0.Bemerkungen ?? "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Geändert am:</span>
+                                    <span class="info-value">@(v0.ModifiedDate.HasValue? v0.ModifiedDate.Value.ToString("dd.MM.yyyy HH:mm") : "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Geändert von:</span>
+                                    <span class="info-value">@(v0.ModifiedBy ?? "-")</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Gesamtgröße:</span>
+                                    <span class="info-value">@v0.FullContentSize</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="info-label">Inhaltstyp:</span>
+                                    <span class="info-value">@(v0.ContentType ?? "-")</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+
+                    @* ── Alle anderen Versionen (collapsed) ── *@
+                    @foreach (var v in alleVersionen.Where(x => x.CurrentVersionId != v0.CurrentVersionId))
+                    {
+                        <tr class="@(v.IsActive ? "version-active-row" : "") versionen-extra-row"
+                            style="display:none;">
+                            <td>
+                                <div class="versions-actions-div">
+                                    <i class="fa-solid fa-circle-info btn-info-table"
+                                       onclick="toggleInfo('v-@v.CurrentVersionId', event)"
+                                       title="Details"></i>
+                                    <i class="fa-solid fa-download btn-download"
+                                       data-object-id="@v.CurrentVersionId"
+                                       title="Herunterladen"
+                                       style="cursor:pointer;">
+                                    </i>
+                                </div>
+                            </td>
+                            <td>
+                                @if (v.IsActive)
+                                {
+                                    <span class="v-badge v-badge-active">@v.VersionNr</span>
+                                }
+                                else
+                                {
+                                    <span class="v-badge">@v.VersionNr</span>
+                                }
+                            </td>
+                            <td>@(v.Description ?? "-")</td>
+                            <td>@(v.FileExtension ?? "-")</td>
+                            <td>@v.ContentSize</td>
+                            <td>@(v.Dokumentdatum.HasValue? v.Dokumentdatum.Value.ToString("dd.MM.yyyy") : "-")</td>
+                            <td>@v.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@v.CreatedBy</td>
+                            <td>
+                                @if (v.IsSigned)
+                                {
+                                    <span class="v-status v-status-signed"><i class="fa-solid fa-signature"></i> Signiert</span>
+                                }
+                                @if (v.Final)
+                                {
+                                    <span class="v-status v-status-final"><i class="fa-solid fa-lock"></i> Final</span>
+                                }
+                                @if (v.IsArchived)
+                                {
+                                    <span class="v-status v-status-archived"><i class="fa-solid fa-box-archive"></i> Archiviert</span>
+                                }
+                                @if (!v.IsSigned && !v.Final && !v.IsArchived)
+                                {
+                                    <span style="color:var(--color-text-small);font-size:11px;">—</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr id="info-v-@v.CurrentVersionId" class="info-row versionen-extra-row" style="display:none;">
+                            <td colspan="9">
+                                <div class="info-content">
+                                    <div class="info-item"><span class="info-label">Dokument-ID:</span><span class="info-value">@v.DocumentObjektId</span></div>
+
+                                    <div class="info-item"><span class="info-label">Bemerkungen:</span><span class="info-value">@(v.Bemerkungen ?? "-")</span></div>
+
+                                    <div class="info-item"><span class="info-label">Geändert am:</span><span class="info-value">@(v.ModifiedDate.HasValue? v.ModifiedDate.Value.ToString("dd.MM.yyyy HH:mm") : "-")</span></div>
+
+                                    <div class="info-item"><span class="info-label">Geändert von:</span><span class="info-value">@(v.ModifiedBy ?? "-")</span></div>
+
+                                    <div class="info-item"><span class="info-label">Gesamtgröße:</span><span class="info-value">@v.FullContentSize</span></div>
+
+                                    <div class="info-item"><span class="info-label">Inhaltstyp:</span><span class="info-value">@(v.ContentType ?? "-")</span></div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @* ── Expand/Collapse Footer-Link ── *@
+            @if (alleVersionen.Count > 1)
+            {
+                <div class="versionen-expand-bar" id="versionen-expand-@Model.Dokument.ObjektId"
+                     onclick="toggleAlleVersionen('@Model.Dokument.ObjektId', this)">
+                    <i class="fa-solid fa-chevron-down toggle-chevron"></i>
+                    <span class="versionen-expand-label">Alle @alleVersionen.Count Versionen anzeigen</span>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+

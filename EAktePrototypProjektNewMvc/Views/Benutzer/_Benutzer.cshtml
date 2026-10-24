@@ -1,0 +1,92 @@
+﻿@model EAktePrototypProjektNewMvc.Models.Persone.Personen
+
+<div class="page-container">
+    <div class="table-container">
+        <div class="table-container-inner">
+            <div class="account-container">
+                <!-- Profilekarte -->
+                <div class="card profile-card">
+                    <div class="card-header">
+                        <h3>Mein Profil</h3>
+                    </div>
+                    <div class="profile-content">
+                        <div class="avatar">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="top-user-content">
+                            <div>
+                                <h4>
+                                    @Model.Vorname @Model.Name
+                                    @if (Model.Rollen.Any(r => r.Rolle == "Administrator"))
+                                    {
+                                        <span>
+                                            <i class="fa-solid fa-crown"></i>
+                                        </span>
+                                    }
+                                </h4>
+                                <p class="role">@string.Join(", ", Model.Rollen.Select(r => r.Rolle))</p> 
+                            </div>
+                            <div>
+                                @if (Model.Rollen.Any(r => r.Rolle == "Administrator" || r.Rolle == "IT-Support"))
+                                {
+                                    <a href="http://adminpanel.test/" class="admin-link" target="_blank">
+                                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                                        Admin Panel
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Persönliche Informationen -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Persönliche Informationen</h3>
+                    </div>
+                    <div class="info-grid">
+                        <div>
+                            <span class="label">Titel</span>
+                            <p>@Model.Titel</p>
+                        </div>
+                        <div>
+                            <span class="label">Vorname</span>
+                            <p>@Model.Vorname</p>
+                        </div>
+                        <div>
+                            <span class="label">Nachname</span>
+                            <p>@Model.Name</p>
+                        </div>
+                        <div>
+                            <span class="label">E-Mail</span>
+                            <p>@Model.Email</p>
+                        </div>
+                        <div>
+                            <span class="label">Abteilung</span>
+                            <p>@(Model.AbteilungReferate != null && Model.AbteilungReferate.Any() ? string.Join(", ", Model.AbteilungReferate.Select(x => x.Abteilung).Where(x => !string.IsNullOrWhiteSpace(x))) : "—")</p>
+                        </div>
+                        <div>
+                            <span class="label">Abteilung / <span class="referat-text-info">Referat</span></span>
+                            <p>
+                                @Html.Raw(Model.AbteilungReferate != null && Model.AbteilungReferate.Any(x => !string.IsNullOrWhiteSpace(x.Abteilung) || !string.IsNullOrWhiteSpace(x.Referat)) ? string.Join(", ", Model.AbteilungReferate
+                                                                                                    .Where(x => !string.IsNullOrWhiteSpace(x.Abteilung) || !string.IsNullOrWhiteSpace(x.Referat))
+                                                                                                    .Select(x => $"{x.Abteilung ?? "—"} - <span class=\"referat-text-info\">{x.Referat ?? "—"}</span>"))
+                                                                                                    : "—"
+                                                                                                    )
+                            </p>
+                        </div>
+                        <div>
+                            <span class="label">Stelle</span>
+                            <p>@Model.Stelle</p>
+                        </div>
+                        <div>
+                            <span class="label">Benutzer-ID</span>
+                            <p>@Model.UId</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

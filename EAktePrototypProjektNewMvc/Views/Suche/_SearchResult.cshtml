@@ -1,0 +1,63 @@
+﻿<script>
+     // Übergibt den gespeicherten Suchzustand ( * var state = HttpContext.Session.GetObject<SearchState>("Search_State"); * ) aus dem Backend (Session)
+    // an das Frontend (JavaScript), damit die Suche wiederhergestellt werden kann.
+    window.searchModule = window.searchModule || {};
+    window.searchModule.savedState = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model ?? new { }))
+</script>
+
+<div class="hierarchy-suche-table">
+    <div class="table-container">
+        <div class="table-container-inner suche-inner">
+            <table>
+                <thead>
+                    <tr id="searchHeaderRow">
+
+                        <th>
+                            <select id="objectTypeSelect">
+                                <option value="Akte">Akte</option>
+                                <option value="Vorgang">Vorgang</option>
+                                <option value="Ordner">Ordner</option>
+                                <option value="Dokument">Dokument</option>
+                            </select>
+                        </th>
+
+                        <!-- dynamic inputs -->
+
+                        <th id="actionButtons">
+                            <div class="action-buttons-inner">
+                            <select id="globalPageSizeSelect" title="Seitenanzahl auswählen">
+                                <option>5</option>
+                                <option>10</option>
+                                <option>50</option>
+                                <option>100</option>
+                                <option selected>250</option>
+                            </select>
+                                <button class="btn-search" onclick="searchModule.loadSearch()" title="Suche starten">
+                                <i class="fas fa-search"></i>
+                            </button>
+
+                                <button class="btn-search" type="button" onclick="searchModule.resetFilters()" title="Filter zurücksetzen">
+                                <i class="fa-solid fa-arrow-rotate-right rotate"></i>
+                            </button>
+                            </div>
+                        </th>
+                    </tr>
+
+                    <tr id="sortHeaderRow"></tr>
+                </thead>
+                <tbody id="tableSearchContainer"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<style>
+    .daterange-input {
+        width: 35%;
+        min-width: 0;
+    }
+</style>

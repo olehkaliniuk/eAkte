@@ -1,0 +1,152 @@
+﻿@model EAktePrototypProjektNewMvc.Models.Dokumente.DokumentListViewModel
+
+<tr data-sort-header="Dokument"
+    data-sort-column="@Model.SortColumn"
+    data-sort-direction="@Model.SortDirection"
+    style="display:none;">
+</tr>
+
+@if (Model.Dokumente != null && Model.Dokumente.Count > 0)
+{
+    foreach (var d in Model.Dokumente)
+    {
+        <tr class="js-table-node no-select" data-object-id="@d.ObjektId" data-node-type="Dokument">
+            <td>Dokument</td>
+            <td>@d.Name</td>
+            <td>@d.CreatorName</td>
+            <td>@(d.CreationDate.HasValue ? d.CreationDate.Value.ToString("dd.MM.yyyy") : "")</td>
+            <td>@(d.ModifyDate.HasValue ? d.ModifyDate.Value.ToString("dd.MM.yyyy") : "")</td>
+            <td>
+                <i class="fa-solid fa-circle-info btn-info-table" onclick="toggleInfo('@d.ObjektId', event)" title="Info zu @d.Name"></i>
+                <i class="fa-solid fa-circle-chevron-right btn-info-table weiter-btn" title="Klicken um das Element im Baum anzuzeigen." style="margin-left:5px" ></i>
+            </td>
+        </tr>
+
+        <!-- Info -->
+        <tr id="info-@d.ObjektId" class="info-row" style="display:none;">
+            <td colspan="7">
+
+                <div class="info-content">
+
+                    <div class="info-item">
+                        <span class="info-label">Objekt-Typ:</span>
+                        <span class="info-value">Dokument</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Objekt-Id:</span>
+                        <span class="info-value">
+                            <a href="@Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@d.ObjektId">
+                                @Context.Request.GetBaseUrl()/bescheidbearbeitung?ObjectId=@d.ObjektId
+                            </a>
+                        </span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Type:</span>
+                        <span class="info-value"><span class="v-badge">@(d.ContentType ?? "-")</span></span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Aktenzeichen:</span>
+                        <span class="info-value">@d.Aktenzeichen</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Betreff:</span>
+                        <span class="info-value">@d.Subject</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Gegenstand:</span>
+                        <span class="info-value">@d.Gegenstand</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Antragsteller:</span>
+                        <span class="info-value">@d.Antragsteller</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Owner:</span>
+                        <span class="info-value">@d.OwnerName</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Version:</span>
+                        <span class="info-value"><span class="v-badge v-badge-active">@(d.VersionNr)</span></span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Dateityp:</span>
+                        <span class="info-value">@d.FileExtension</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Größe:</span>
+                        <span class="info-value">@d.ContentSize Bytes</span>
+                    </div>
+
+                </div>
+
+            </td>
+        </tr>
+    }
+}
+else
+{
+    <tr><td colspan="7" style="text-align:center;">Keine Einträge gefunden</td></tr>
+}
+
+
+<div class="pagination-container">
+    <div class="pagination-buttons">
+        @{
+            bool isEmpty = Model.TotalPagesSearch == 0;
+        }
+        <button class="p-btn" onclick="loadPageS(1)"
+                @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-left"></i>
+        </button>
+        <button class="p-btn" onclick="loadPageS(@(Model.CurrentPage - 1))"
+                @(Model.CurrentPage == 1 || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-left"></i>
+        </button>
+        <div class="pagination-page-info">
+            <input id="currentPage" type="number" min="1"
+                   max="@Model.TotalPagesSearch" value="@Model.CurrentPage"
+                   @(isEmpty ? "disabled" : "") />
+            <span class="pagination-sep">von</span>
+            <span class="pagination-total">@Model.TotalPagesSearch</span>
+        </div>
+        <button class="p-btn" onclick="loadPageS(@(Model.CurrentPage + 1))"
+                @(Model.CurrentPage >= Model.TotalPagesSearch || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-right"></i>
+        </button>
+        <button class="p-btn" onclick="loadPageS(@Model.TotalPagesSearch)"
+                @(Model.CurrentPage >= Model.TotalPagesSearch || isEmpty ? "disabled" : "")>
+            <i class="fa fa-angle-double-right"></i>
+        </button>
+    </div>
+
+    <div class="page-size">
+        <label class="pagination-label">Einträge pro Seite</label>
+        <select id="pageSizeSelect" class="pagination-select"
+                onchange="searchModule.loadSearch(1)">
+            @foreach (var size in new[] { 1, 5, 10, 25, 50, 100 })
+            {
+                var selected = Model.PageSize == size ? "selected" : "";
+                @:<option value="@size" @selected>@size</option>
+            }
+        </select>
+    </div>
+
+    <div class="actions2">
+        <span class="pagination-label">Gesamt</span>
+        <input class="pagination-count-input" value="@Model.LimitedCount" readonly />
+        <button class="p-btn" title="Aktualisieren"
+                onclick="document.getElementById('pageSizeSelect').value = 10; searchModule.loadSearch(1);">
+            <i class="fa fa-sync"></i>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,783 @@
+﻿
+/* ── 1. Modal-Rahmen ──────────────────────────────────────── */
+.file-modal {
+    position: fixed;
+    top: 100px;
+    left: 100px;
+    min-width: 42.86rem; /* 600 px */
+    min-height: 57.14rem; /* 800 px */
+    background: var(--color-bg-second);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-lines);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+    resize: both;
+    overflow: auto;
+    will-change: transform;
+    touch-action: none;
+}
+
+
+/* ── 2. Titelleiste ───────────────────────────────────────── */
+.modal-header {
+    background: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 12px;
+    cursor: grab; 
+    user-select: none;
+    flex-shrink: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.modal-header-title {
+    color: var(--color-path-text);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+    .modal-header-title i {
+        color: var(--color-path-text);
+    }
+
+.modal-close-btn {
+    border: none;
+    background: rgb(255 255 255 / 0.83);
+    color: var(--color-path-text);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    transition: background 0.15s;
+}
+
+    .modal-close-btn:hover {
+        background: rgba(255,255,255,0.53);
+    }
+
+
+/* ── 3. Fortschrittsbalken ────────────────────────────────── */
+/* Dünner Balken direkt unter der Titelleiste.
+   Breite und Farbe werden per JS (fortschrittsbalkenAktualisieren) gesetzt:
+     33 % = Tab 1 offen     → blau
+     66 % = Tab 1 fertig    → blau
+    100 % = Tab 1+2 fertig  → grün */
+.progress-bar-wrap {
+    height: 6px;
+    background: var(--color-bg);
+    flex-shrink: 0;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%; /* Startwert: Tab 1 aktiv */
+    background: var(--color-accent); /* Blau (wird per JS auf Grün geändert) */
+    transition: width 0.4s ease, background 0.3s ease;
+}
+
+
+/* ── 4. Kopfzeile (Action-Header) ─────────────────────────── */
+.action-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-border-lines);
+    background: var(--color-bg);
+}
+
+    .action-header h2 {
+        color: var(--color-accent);
+        font-size: 0.9375rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+.action-header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* Kleine Info-Chips (SVA, Sachgebiet, Zulassungsnummer) */
+.meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    color: var(--color-text-small);
+    background: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    border-radius: 20px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+    .meta-chip i {
+        font-size: 0.6875rem;
+        color: var(--color-accent);
+    }
+
+    .meta-chip strong {
+        color: var(--color-text);
+        font-weight: 600;
+    }
+
+
+/* ── 5. Tab-Leiste ────────────────────────────────────────── */
+.modal-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 8px 12px 0;
+    border-bottom: 1px solid var(--color-border-lines);
+    flex-shrink: 0;
+    background: var(--color-bg-second);
+}
+
+.modal-tab-btn {
+    padding: 6px 14px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--color-text);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    margin-bottom: -1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+    .modal-tab-btn i {
+        font-size: 0.75rem;
+        opacity: 0.75;
+    }
+
+    .modal-tab-btn:hover {
+        color: var(--color-accent);
+        background: transparent;
+    }
+
+    .modal-tab-btn.active {
+        color: var(--color-accent);
+        border-bottom: 2px solid var(--color-accent);
+    }
+
+        .modal-tab-btn.active i {
+            opacity: 1;
+        }
+
+    .modal-tab-btn.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+/* Galochke neben Tab-Beschriftung:
+   Wird per JS (tabGalochkeSetzen) eingefügt wenn Tab vollständig. */
+.tab-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #16a34a; /* Grün */
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    flex-shrink: 0;
+    animation: tabCheckPopIn 0.25s ease;
+}
+
+/* Einblend-Animation für die Galochke */
+@keyframes tabCheckPopIn {
+    from {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+
+/* ── 6. Modal-Body + Tab-Panels ───────────────────────────── */
+.modal-body {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Tab-Inhalt ausblenden */
+.tab-panel {
+    display: none;
+}
+
+    /* Aktiver Tab-Inhalt einblenden */
+    .tab-panel.active {
+        display: block;
+    }
+
+
+/* ── 7. Button-Container (Leiste innerhalb jedes Tabs) ─────── */
+.create-akte-btn-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: var(--color-bg-third);
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-md);
+}
+
+/* Gruppe von Buttons innerhalb des Containers */
+.btn-group {
+    display: flex;
+    align-items: center;
+   /* gap: 6px;*/
+    flex-wrap: wrap;
+}
+
+
+/* ── 8. Einheitliche Aktions-Buttons ──────────────────────── */
+.akte-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+    .akte-btn i {
+        font-size: 0.75rem;
+        color: var(--color-btn-text);
+    }
+
+/* Sekundär: Icon erbt Akzentfarbe */
+.akte-btn-secondary i {
+    color: inherit;
+}
+
+/* Primary — ausgefüllter Akzent-Button */
+.akte-btn-primary {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: var(--color-accent);
+}
+
+    .akte-btn-primary:hover:not(:disabled) {
+        opacity: 0.88;
+        box-shadow: 0 2px 8px rgba(30,90,168,0.18);
+    }
+
+/* Secondary — umrandeter Button */
+.akte-btn-secondary {
+    background: transparent;
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+    .akte-btn-secondary:hover:not(:disabled) {
+        background: transparent;
+        box-shadow: 0 0 4px 0.5px color-mix(in srgb, var(--color-accent) 60%, transparent), 0 0 8px 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
+    }
+
+/* Danger — rote Umrandung (Entfernen-Button) */
+.akte-btn-danger {
+    background: var(--color-red-bg);
+    color: var(--color-red-text);
+    border-color: var(--color-red-border);
+    opacity: 0.88;     
+}
+
+    .akte-btn-danger i {
+        color: var(--color-red-icon);
+    }
+
+    .akte-btn-danger:hover {
+        opacity: 1;
+        background: var(--color-red-bg);
+    }
+
+/* Deaktivierter Zustand für alle Buttons */
+.akte-btn:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* "Weiter"-Button wenn Pflichtfelder alle gefüllt → wird blau ausgefüllt */
+/*.akte-btn-secondary.btn-ready {
+    background: var(--color-accent);
+    color: #fff;
+}*/
+
+
+/* ── 9. Speichern-Button Zustände ─────────────────────────── */
+
+/* Gesperrter Zustand: grau + Schloss-Icon
+   Aktiv wenn Tab 1 oder Tab 2 noch unvollständig. */
+.akte-btn-save-locked {
+    background: transparent;
+    color: var(--color-text-small);
+    border-color: var(--color-border-lines);
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+/* Freigeschalteter Zustand: grün + Disketten-Icon
+   Aktiv wenn Tab 1 UND Tab 2 vollständig ausgefüllt. */
+.akte-btn-save-ready {
+    background: var(--color-sort-asc);
+    color: #fff;
+    border-color: var(--color-sort-asc);
+}
+
+    .akte-btn-save-ready:hover:not(:disabled) {
+        background: var(--color-sort-asc);
+        opacity: 0.88;
+        box-shadow: 0 2px 8px var(--color-sort-asc);
+    }
+
+/* Puls-Animation beim Freischalten des Speichern-Buttons */
+@keyframes speichernFreischalten {
+    0% {
+        box-shadow: 0 0 0 0 rgba(22,163,74,0.45);
+    }
+
+    70% {
+        box-shadow: 0 0 0 8px rgba(22,163,74,0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(22,163,74,0);
+    }
+}
+
+.akte-btn-save-ready {
+    animation: speichernFreischalten 0.5s ease;
+}
+
+
+/* ── 10. Pflichtfeld-Stern + Ungültig-Hervorhebung ─────────── */
+
+/* Roter Stern hinter Pflichtfeld-Labels */
+.req-star {
+    color: #c0392b;
+    margin-left: 2px;
+    font-weight: 700;
+    font-size: 1rem;
+    display: inline-block;
+    line-height: 1; 
+    vertical-align: baseline; 
+}
+
+/* Rote Umrandung bei leerem Pflichtfeld
+   Wird per JS (validateTab1 / validateTab2) gesetzt und entfernt. */
+.modal-input.invalid,
+.modal-select.invalid,
+.modal-textarea.invalid {
+    border-color: var(--color-red-text);
+    box-shadow: 0 0 0 2px var(--color-red-border);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+
+/* ── 11. Validierungs-Hinweis + Erfolgs-Badge ─────────────── */
+
+/* Fehlertext unter dem Formular (standardmäßig versteckt) */
+.validation-hint {
+    font-size: 0.75rem;
+    color: #c0392b;
+    margin-top: 6px;
+    display: none; /* Per JS mit .show eingeblendet */
+    animation: hinweisEinblenden 0.2s ease;
+}
+
+    /* Klasse .show blendet den Hinweis ein */
+    .validation-hint.show {
+        display: block;
+    }
+
+/* Einblend-Animation für den Hinweis */
+@keyframes hinweisEinblenden {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Grünes Erfolgs-Badge ("Alle Pflichtfelder ausgefüllt")
+   Standardmäßig versteckt, per JS mit .visible eingeblendet. */
+.all-done-badge {
+    display: inline-flex; /* Standardmäßig unsichtbar */
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: var(--color-btn-green-bg); /* Hellgrüner Hintergrund */
+    color: #16a34a; /* Dunkelgrüner Text */
+    border: 1px solid rgba(22,163,74,0.25);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    opacity: 0; /* Startet unsichtbar */
+}
+
+    /* Klasse .visible macht das Badge sichtbar */
+    .all-done-badge.visible {
+        opacity: 1;
+    }
+
+
+/* ── 12. Typografie im Modal ──────────────────────────────── */
+
+/* Abschnitts-Überschriften (z. B. "Federführend", "Grunddaten") */
+.section-label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-small);
+    font-weight: 600;
+    margin: 0 0 8px;
+}
+
+/* Beschriftung über Eingabefeldern */
+.field-label {
+    display: block;
+    font-size: 0.6875rem;
+    color: var(--color-text-small);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+/* Wrapper für Label + Feld (stellt vertikale Ausrichtung sicher) */
+.field-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Trennlinie zwischen Formular-Abschnitten */
+.divider {
+    border: none;
+    border-top: 1px solid var(--color-border-lines);
+    margin: 14px 0;
+}
+
+
+/* ── 13. Feld-Grids ───────────────────────────────────────── */
+
+/* Standard: 2-spaltig */
+.field-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+    /* Modifier: 1-spaltig (Textarea-Felder) */
+    .field-group.cols-1 {
+        grid-template-columns: 1fr;
+    }
+
+    /* Modifier: 3-spaltig (Federführend-Zeile) */
+    .field-group.cols-3 {
+        grid-template-columns: 1fr;
+    }
+
+
+/* ── 14. Eingabefelder ────────────────────────────────────── */
+/*.modal-input,
+.modal-select,
+.modal-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-sm);
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    outline: none;
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+    .modal-input:focus,
+    .modal-select:focus,
+    .modal-textarea:focus {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px rgba(30,90,168,0.12);
+    }*/
+
+/* Select: eigener Pfeil-Indikator */
+.modal-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+}
+
+/* Textarea: vertikal skalierbar */
+.modal-textarea {
+    resize: vertical;
+    min-height: 60px;
+    line-height: 1.5;
+}
+
+
+/* ── 15. Radio-Gruppe ─────────────────────────────────────── */
+.radio-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+    margin-bottom: 4px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.8125rem;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+    .radio-label input[type="radio"] {
+        accent-color: var(--color-accent);
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+
+/* ── 16. Antragsteller-Blöcke ─────────────────────────────── */
+.applicant-block {
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.applicant-block-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+    .applicant-block-header input[type="checkbox"] {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--color-accent);
+        cursor: pointer;
+    }
+
+/* Entfernen-Button innerhalb eines dynamischen Antragsteller-Blocks */
+.remove-applicant-btn {
+    margin-left: auto; /* An den rechten Rand schieben */
+    background: transparent;
+    border: 1px solid #c0392b;
+    color: #c0392b;
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: background 0.15s;
+}
+
+    .remove-applicant-btn:hover {
+        background: rgba(192,57,43,0.08);
+    }
+
+
+/* ── 17. "Weiteren Antragsteller hinzufügen"-Button ──────── */
+.add-applicant-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px dashed var(--color-accent);
+    color: var(--color-accent);
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    cursor: pointer;
+    margin-bottom: 14px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.15s;
+    box-shadow: none;
+}
+
+    .add-applicant-btn:hover {
+        background: rgba(30,90,168,0.06);
+    }
+
+
+
+
+.stelle-combo-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 5px;
+}
+
+    .stelle-combo-wrapper input:nth-of-type(1),
+    .stelle-combo-wrapper input:nth-of-type(2) {
+        flex: 1 1 50%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+.radio-group.invalid {
+    border: 1px solid;
+    border-color: var(--color-red-text);
+    box-shadow: 0 0 0 2px var(--color-red-border);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.radio-group {
+    padding:5px;
+}
+
+
+
+
+/* ── 18. Tab 1: Zwei-Spalten-Layout mit Status-Tabelle ───── */
+.tab1-layout {
+    display: flex;
+    align-items: stretch; /* rechte Spalte übernimmt Höhe der linken */
+    gap: 16px;
+}
+
+.tab1-fields {
+    flex: 1 1 60%;
+    min-width: 0;
+}
+
+.tab1-status-table {
+    flex: 1 1 40%;
+    min-width: 0;
+    align-self: stretch;
+    border: 1px solid var(--info-lines);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-bg-second);
+}
+
+.status-table {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+    .status-table thead th {
+        background: var(--color-bg-third);
+        color: var(--info-table-label-text);
+        text-align: left;
+        padding: 8px 12px;
+        font-weight: 600;
+        border-bottom: 1px solid var(--info-lines);
+        position: sticky;
+        top: 0;
+    }
+
+    .status-table tbody td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--info-lines);
+        color: var(--color-text);
+    }
+
+    .status-table tbody tr:nth-child(even) {
+        background: var(--color-bg-third);
+    }
+
+    .status-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+/* ── Statustabelle: Sektionskopf (z. B. "Aktuelle offene Aktion", "Verlauf") ── */
+.status-section-header td {
+    background: var(--color-bg-third);
+    color: var(--color-accent);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--info-lines);
+}
+
+    .status-section-header td i {
+        margin-right: 6px;
+        font-size: 0.75rem;
+    }
+
+/* ── Hervorgehobene Zeilen: aktuelle offene Aktion ── */
+.status-highlight td {
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    border-left: 3px solid var(--color-accent);
+}
+
+    .status-highlight td:first-child {
+        font-weight: 600;
+        padding-left: 9px; /* 12px - 3px Border-Ausgleich */
+    }
+
+/* Letzte Zeile des hervorgehobenen Blocks bekommt zusätzlichen Abstand nach unten */
+.status-highlight-last td {
+    border-bottom: 2px solid var(--color-accent);
+}
+
+/* Zebra-Streifen soll die Highlight-Zeilen nicht überschreiben */
+.status-table tbody tr.status-highlight:nth-child(even),
+.status-table tbody tr.status-section-header:nth-child(even) {
+    background: unset;
+}
+
+    .status-table tbody tr.status-highlight:nth-child(even) td {
+        background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    }

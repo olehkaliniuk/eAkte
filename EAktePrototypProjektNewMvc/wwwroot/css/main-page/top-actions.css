@@ -1,0 +1,198 @@
+﻿/* ============================================================
+   TOP ACTION BUTTONS + DROPDOWN
+   ============================================================ */
+.topbuttons-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    border-radius: 0px;
+    color: var(--color-text);
+    padding: 8px 12px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    box-shadow: var(--box-shadows);
+    white-space: nowrap;
+}
+
+.dropdown-toggle--left {
+    border-radius: 9px 0 0 9px;
+}
+
+.dropdown-toggle--right {
+    border-radius: 0 9px 9px 0;
+    border-left: none; 
+}
+
+    .dropdown-toggle:hover {
+        background-color: var(--color-bg-second);
+        border-color: rgba(0,0,0,0.18);
+        box-shadow: var(--box-shadows-hoover);
+        color: var(--color-accent);
+    }
+
+    .dropdown-toggle i {
+        font-size: 11px;
+        opacity: 0.6;
+        transition: transform 0.2s;
+    }
+
+    .dropdown-menu.open + .dropdown-toggle i,
+    .dropdown-toggle.active i {
+        transform: rotate(180deg);
+    }
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: max-content;
+    background: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    padding: 6px;
+    z-index: 999;
+    animation: dropdownFadeIn 0.12s ease;
+}
+
+    .dropdown-menu.open {
+        display: block;
+    }
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    padding: 3px 10px;
+    font-size: 1em;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s, color 0.12s;
+    box-shadow: none;
+}
+
+    .dropdown-menu button:hover {
+        background-color: var(--blue-bg);
+        color: var(--color-accent);
+        box-shadow: none;
+    }
+
+.dropdown-menu hr {
+    border: none;
+    border-top: 1px solid var(--color-border-lines);
+    margin: 4px 0;
+}
+
+.dropdown-section-label {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--color-text-small);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px 2px;
+}
+
+
+/* ---- Submenu ---- */
+        .dropdown-submenu {
+    position: relative;
+}
+
+    .dropdown-submenu > button {
+        justify-content: space-between;
+    }
+
+        .dropdown-submenu > button i {
+            font-size: 1em;
+            opacity: 0.5;
+            transition: transform 0.15s, opacity 0.15s;
+        }
+
+        .dropdown-submenu > button:hover i {
+            opacity: 1;
+            transform: translateX(2px);
+        }
+
+.dropdown-submenu-menu {
+    display: none;
+    position: absolute;
+    left: calc(100% + 10px);
+    top: -7px;
+    width: max-content;
+    background: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    padding: 6px;
+    z-index: 1000;
+    animation: dropdownFadeIn 0.12s ease;
+}
+
+    .dropdown-submenu-menu.open {
+        display: block;
+    }
+
+    .dropdown-submenu-menu button {
+        font-size: 1em;
+        padding: 3px 10px;
+    }
+
+
+.dropdown-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    padding: 2px 10px;
+    font-size: 1em;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s, color 0.12s;
+    box-shadow: none;
+}
+
+
+.dropdown-toggle-icon {
+    transition: transform 0.2s;
+}
+
+    .dropdown-toggle-icon.rotated {
+        transform: rotate(180deg);
+        color: var(--color-accent-hover);
+    }
+

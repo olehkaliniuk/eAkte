@@ -1,0 +1,448 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EAktePrototypProjekt</title>
+    <script type="importmap"></script>
+  
+    <script>
+            (function () {
+            try {
+                if (localStorage.getItem("theme") === "dark") {
+                    document.documentElement.classList.add("dark-theme");
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="~/EAktePrototypProjektNewMvc.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/main.css" asp-append-version="true" />
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-inner">
+
+            <!-- Left: Logo / App name -->
+            <div class="header-brand">
+                <i class="fa-solid fa-display"></i>
+                <span class="header-brand-text">eAkte</span>
+            </div>
+
+            <!-- Right: actions -->
+            <ul class="header-actions">
+
+                <li id="mitzeichnung-badge" class="d-none">
+                    <span class="mode-mitzeichnung">Mitzeichnung</span>
+                </li>
+
+                <li id="mitzeichnung-devider" class="header-divider d-none"></li>
+
+                @if (Context.Session.GetString("UserName") == null)
+                {
+                    <li>
+                        <a class="header-action-link" asp-controller="Login" asp-action="Login">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            <span>Anmelden</span>
+                        </a>
+                    </li>
+                }
+                else
+                {
+
+                    <li>
+                        <div id="mandant-switcher" style="display:none;">
+                            <select id="mandantSelect"></select>
+                        </div>
+                    </li>
+
+                    <!-- Toggle admin modus -->
+                    @if (Context.Session.GetString("Rollen")?.Split(',').Contains("Administrator") == true)
+                    {
+                        <li>
+                            <button id="admin-mode" class="admin-mode @(Context.Session.GetString("AdminMode") == "true" ? "active" : "")" title="@(Context.Session.GetString("AdminMode") == "true" ? "Sie befinden sich im Adminmodus, durch das Deaktivieren, verlassen Sie diesen" : "Sie befinden sich nicht im Adminmodus, durch das Aktivieren, wechseln Sie in diesen")">
+                                <i class="fas fa-crown @(Context.Session.GetString("AdminMode") == "true" ? "active" : "")"></i>
+                            </button>
+                        </li>
+                        <li class="header-divider"></li>
+                    }
+
+                    <!-- User info -->
+                    <li>
+                        <a class="header-user-chip" onclick="loadBenutzer()" title="Benutzerinformationen anzeigen">
+                            <span class="header-user-avatar">
+                                <i class="fa-solid fa-user"></i>
+                            </span>
+                            <span class="header-user-email">@Context.Session.GetString("UserEmail")</span>
+                            @if (Context.Session.GetString("Rollen")?.Split(',').Contains("Administrator") == true)
+                            {
+                                <i class="fa-solid fa-crown header-crown"></i>
+                            }
+                        </a>
+                    </li>
+
+                    <li class="header-divider"></li>
+
+                    <!-- Toggle theme -->
+                    <li>
+                        <button id="toggleTheme" class="header-icon-btn" title="Design wechseln">
+                            <i id="iconThemeToggle" class="fa-solid fa-circle-half-stroke"></i>
+                        </button>
+                    </li>
+
+                    <!-- Reload -->
+                    <li>
+                        <button id="buttonReload" class="header-icon-btn" title="Neu laden">
+                            <i id="iconReload" class="fa-solid fa-arrow-rotate-right rotate"></i>
+                        </button>
+                    </li>
+
+                    <!-- Settings -->
+                    <li>
+                        <button class="header-icon-btn" id="toggleSettings" title="Einstellungen">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                    </li>
+
+                    <li class="header-divider"></li>
+
+                    <!-- Logout -->
+                    <li>
+                        <a class="header-action-link header-logout" asp-controller="Login" asp-action="Logout">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Abmelden</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <div class="container">
+            <main role="main">
+                @if (Context.Session.GetString("UserName") != null)
+                {
+                <!-- Tree -->
+                <div class="nav-container" id="menu">
+                    <ul class="nav-tree">
+
+                        @if (Context.Session.GetString("AdminMode") == "true")
+                        {
+                            <li>
+                                <i class="fa-solid fa-trash"></i>
+                                <a href="#" onclick="loadGeloschteDokumente(); return false;">Gelöschte Dokumente</a>
+                            </li>
+                        }
+                        <li>
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <a href="#" onclick="loadMeineVorgaenge(); return false;">Meine Vorgänge</a>
+                            </li>
+
+                            <li>
+                                <i class="fa-solid fa-file-lines"></i>
+                                <a href="#" onclick="loadMeineDokumente(); return false;">Meine Dokumente</a>
+                            </li>
+
+                            @{
+                                var path = Context.Request.Path.Value.ToLower();
+                                var showTrees = path.StartsWith("/bescheidbearbeitung");
+                                var mode = Context.Session.GetString("AccessCheckMode");
+                                var bbUrl = Url.Content("~/bescheidbearbeitung");
+                            }
+    
+
+                            <li class="nav-section">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <i class="fa-solid fa-file-signature"></i>
+                                    <a href="@bbUrl" onclick="$.get('@bbUrl/set-access-mode?mode=Mitzeichnung')">Mitzeichnung</a>
+                                </div>
+                                @if (showTrees)
+                                {
+                                    <div class="nav-subtree" id="mitzeichnungTreeContainer">
+                                        @await Component.InvokeAsync("MitzeichnungTree")
+                                    </div>
+                                }
+                            </li>
+                            <li class="nav-section">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <a href="@bbUrl" onclick="$.get('@bbUrl/set-access-mode?mode=Bescheidbearbeitung')">Bescheidbearbeitung</a>
+                                </div>
+                                @if (showTrees)
+                                {
+                                    <div class="nav-subtree" id="bescheidTreeContainer">
+                                        @await Component.InvokeAsync("BescheidTree")
+                                    </div>
+                                }
+                            </li>
+                        </ul>
+
+                        <!-- Resizer -->
+                        <div class="resizer" id="resizer"></div>
+
+                        <!-- Close tree -->
+                        <div class="arrows" id="closeNav">
+                            <button class="theme-btn">
+                                <i class="fa-solid fa-caret-left"></i>
+                                <i class="fa-solid fa-caret-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <br />
+                }
+            <!-- Body -->
+            @RenderBody()
+            </main>
+       
+    </div>
+
+    @{
+        var isAdminModeActive = Context.Session.GetString("AdminMode") == "true";
+    }
+
+    <!-- Roles -->
+    <script>
+        window.userRoles = "@Context.Session.GetString("Rollen")".split(',');
+        window.adminMode = @isAdminModeActive.ToString().ToLower();
+    </script>
+
+    <script>
+        window.currentUId = "@(Context.Session.GetString("UId") ?? "System")";
+    </script>
+
+    <!--  Context menu document -->
+    <div id="contextMenu" class="context-menu">
+
+
+        <!-- Dokumente -->
+        <div class="context-menu-item pdf-converter"><i class="fas fa-file-pdf"></i><div class="btn-divider"></div>PDF Konverter</div>
+        <div class="context-menu-item calendar"><i class="fas fa-calendar"></i><div class="btn-divider"></div> Auf Wiedervorlage legen</div>
+        <div class="context-menu-item email has-submenu">
+            <i class="fas fa-envelope"></i>
+            <div class="btn-divider"></div>
+                Email
+            <i class="fas fa-chevron-right submenu-arrow"></i>
+            <div class="submenu">
+                <div class="context-menu-item" data-action="email-link">Email als Verknüpfung</div>
+                <div class="context-menu-item" data-action="email-copy">Email als Kopie</div>
+                <div class="context-menu-item" data-action="email-pdf">Email als PDF-Kopie</div>
+            </div>
+        </div>
+
+        <div class="context-menu-item vorschau-item"><i class="fas fa-eye"></i><div class="btn-divider"></div> Vorschau</div>
+
+        <div class="context-menu-item view-item"><i class="fas fa-eye"></i><div class="btn-divider"></div>Schreibgeschützt öffnen</div>
+        <div class="context-menu-item edit-item"><i class="fas fa-edit"></i><div class="btn-divider"></div> Bearbeiten</div>
+        <div class="context-menu-item properties-item"><i class="fas fa-info-circle"></i><div class="btn-divider"></div> Eigenschaften</div>
+        <div class="context-menu-item clipboard-item"><i class="fas fa-copy"></i><div class="btn-divider"></div> Zur Zwischenablage hinzufügen</div>
+        <div class="context-menu-item copy-here-item"><i class="fas fa-paste"></i><div class="btn-divider"></div> Hierhin kopieren</div>
+        <div class="context-menu-item move-here-item"><i class="fas fa-arrows-alt"></i><div class="btn-divider"></div> Hierhin verschieben</div>
+
+        <!-- Standart -->
+        <div class="context-menu-item delete-item"><i class="fas fa-trash"></i><div class="btn-divider"></div> Löschen</div>
+        <div class="context-menu-item rename-item"><i class="fas fa-pen"></i><div class="btn-divider"></div> Umbenennen</div>
+        <div class="context-menu-item icon-item"><i class="fas fa-image"></i><div class="btn-divider"></div> Icon aktualisieren</div>
+        <div class="context-menu-item delete-icon-item"><i class="fas fa-times-circle"></i><div class="btn-divider"></div> Icon Löschen</div>
+
+        <!-- Aktionen während der Word-Bearbeitung -->
+        <div class="context-menu-item edit-confirm-item"><i class="fas fa-check-double"></i><div class="btn-divider"></div> Einchecken (neue Version)</div>
+        <div class="context-menu-item edit-confirm-same-item"><i class="fas fa-check"></i><div class="btn-divider"></div> Einchecken (gleiche Version)</div>
+        <div class="context-menu-item edit-skip-item"><i class="fas fa-xmark"></i><div class="btn-divider"></div> Auschecken abbrechen</div>
+
+        <div class="context-menu-item restore-item"><i class="fas fa-rotate-left"></i><div class="btn-divider"></div> Wiederherstellen</div>
+        <div class="context-menu-item purge-item"><i class="fas fa-trash-can" style="color:#c0392b"></i><div class="btn-divider"></div> Endgültig löschen</div>
+
+
+
+        <!-- Keine Berechtiung -->
+        <div class="context-menu-item no-permission" style="display:none;">
+            <i class="fas fa-lock"></i>
+            <div class="btn-divider"></div>
+            <span class="no-permission-text">Keine Berechtigung zum Ändern dieses Elements.</span>
+        </div>
+
+        <div class="context-menu-item no-select-info" style="display:none;">
+            <i class="fas fa-info-circle"></i><div class="btn-divider"></div> Doppelklick für weitere Aktionen.
+        </div>
+        <input type="file" id="iconUpload" style="display:none;" accept="image/*" />
+    </div>
+
+
+    <!-- Wiedervorlage Overlay -->
+    <div id="wvOverlay" class="wv-overlay">
+        <div class="wv-modal">
+            <div class="wv-header">Auf Wiedervorlage legen</div>
+
+            <label class="wv-label">Wiedervorlage am</label>
+            <div class="wv-row">
+                <input type="date" id="wvDate" class="wv-input" />
+                <input type="time" id="wvTime" class="wv-input" value="08:00" />
+            </div>
+
+            <label class="wv-label">Bemerkung</label>
+            <textarea id="wvRemark" class="wv-input" rows="4"
+                      placeholder="Bemerkung eingeben..."></textarea>
+
+            <div class="wv-footer">
+                <button type="button" id="wvCancel" class="wv-btn wv-btn-sec">Abbrechen</button>
+                <button type="button" id="wvSubmit" class="wv-btn wv-btn-pri">Auf Wiedervorlage legen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-container" id="settingsContainer">
+        <div class="settings-header">
+            <i class="fa-solid fa-gear"></i>
+            <span>Einstellungen</span>
+        </div>
+        <div class="setting-group">
+            <label for="fontSizeSelector">Schriftgröße</label>
+            <div class="select-wrapper">
+                <select id="fontSizeSelector">
+                    <option value="0.75">75%</option>
+                    <option selected value="1">100%</option>
+                    <option value="1.25">125%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.75">175%</option>
+                    <option value="2">200%</option>
+                </select>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert -->
+    <div id="customAlertOverlay">
+        <div id="customAlertBox">
+            <div id="customAlertStripe"></div>
+            <div id="customAlertContent">
+                <div id="customAlertHeader">
+                    <span class="alert-icon" id="customAlertIcon"></span>
+                    <span id="customAlertTitle"></span>
+                </div>
+                <div id="customAlertMessage"></div>
+            </div>
+            <div id="customAlertActions">
+                <button class="alert-btn" id="customAlertCancel" style="display:none;">Abbrechen</button>
+                <button class="alert-btn primary" id="customAlertOk">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clipboard Modal -->
+    <div id="clipboardModal" class="clipboard-modal">
+        <div class="clipboard-modal-header">
+            <span class="clipboard-modal-title">Zwischenablage</span>
+
+            <div class="clipboard-modal-actions">
+                <span class="clipboard-modal-count" style="display:none;"></span>
+
+                <button type="button"
+                        class="clipboard-clear-btn"
+                        title="Auswahl entfernen">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <ul class="clipboard-modal-list"></ul>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="customToast">
+        <span class="toast-icon"></span>
+        <span id="customToastMessage"></span>
+    </div>
+
+
+    <footer>
+    </footer>
+    <script>
+     window.APP_BASE = '@Url.Content("~/")';   // "/testEakte/" на сервере, "/" локально
+    </script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+    // Автоматически добавляет префикс ко всем $.ajax/$.get/$.post с путём, начинающимся на "/"
+    $.ajaxPrefilter(function (options) {
+        var base = window.APP_BASE.replace(/\/$/, '');   // "/testEakte" или ""
+        if (base && options.url && options.url.charAt(0) === '/' && options.url.indexOf(base + '/') !== 0) {
+            options.url = base + options.url;
+        }
+    });
+
+    // То же для fetch
+    (function () {
+        var base = window.APP_BASE.replace(/\/$/, '');
+        var origFetch = window.fetch;
+        window.fetch = function (url, opts) {
+            if (base && typeof url === 'string' && url.charAt(0) === '/' && url.indexOf(base + '/') !== 0) {
+                url = base + url;
+            }
+            return origFetch.call(this, url, opts);
+        };
+    })();
+
+    function appUrl(path) {
+        // path без ведущего слеша или с ним: "bescheidbearbeitung?ObjectId=..."
+        return window.APP_BASE.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
+    }
+    </script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/mandant.js" asp-append-version="true"></script>
+    <script src="~/js/treeAjax.js" asp-append-version="true"></script>
+    <script src="~/js/table.js" asp-append-version="true"></script>
+    <script src="~/js/column-settings.js" asp-append-version="true"></script>
+    <script src="~/js/settings.js" asp-append-version="true"></script>
+    <script src="~/js/search.js" asp-append-version="true"></script>
+    <script src="~/js/errors.js" asp-append-version="true"></script>
+    <script src="~/js/headerSize.js" asp-append-version="true"></script>
+    <script src="~/js/customAlert/customAlert.js" asp-append-version="true"></script>
+    <script src="~/js/treeDragDrop.js" asp-append-version="true"></script>
+    <script src="~/js/xlsx.full.min.js" asp-append-version="true"></script>
+    <script src="~/js/contextMenuActions/changeIcon.js" asp-append-version="true"></script>
+    <script src="~/js/contextMenuActions/context-menu.js" asp-append-version="true"></script>
+    <script src="~/js/contextMenuActions/delete-rename-ordner-kahane-dokument.js" asp-append-version="true"></script>
+    <script src="~/js/contextMenuActions/context-menu-wiedervorlage.js" asp-append-version="true"></script>
+    <script src="~/js/contextMenuActions/context-menu-email-actions.js" asp-append-version="true"></script>
+    <script src="~/js/contextMenuActions/context-menu-pdf-converter.js" asp-append-version="true"></script>
+    <script src="~/js/contextMenuActions/context-menu-vorschau.js" asp-append-version="true"></script>
+    <script src="~/js/adressModal.js" asp-append-version="true"></script>
+    <script src="~/js/vorlagenModal.js" asp-append-version="true"></script>
+
+
+    <!-- Ordner -->
+    <script src="~/js/ordner/ordner-core.js" asp-append-version="true"></script>
+    <script src="~/js/ordner/ordner-farbe.js" asp-append-version="true"></script>
+    <script src="~/js/ordner/ordner-create.js" asp-append-version="true"></script>
+
+    <!-- Dokumente -->
+    <script src="~/js/dokument/dokument-core.js" asp-append-version="true"></script>
+    <script src="~/js/dokument/dokument-create.js" asp-append-version="true"></script>
+    <script src="~/js/dokument/dokument-helpers.js" asp-append-version="true"></script>
+    <script src="~/js/dokument/dokument-table-actions.js" asp-append-version="true"></script>
+
+    <!-- eAkte -->
+    <script src="~/js/eAkte/modal-core.js" asp-append-version="true"></script>
+    <script src="~/js/eAkte/modal-antragsteller.js" asp-append-version="true"></script>
+    <script src="~/js/eAkte/modal-kontakte.js" asp-append-version="true"></script>
+    <script src="~/js/eAkte/modal-ablaufdaten.js" asp-append-version="true"></script>
+    <script src="~/js/eAkte/modal-gebuehre.js" asp-append-version="true"></script>
+    <script src="~/js/eAkte/modal-save.js" asp-append-version="true"></script>
+    <script src="~/js/eAkte/modal-validation.js" asp-append-version="true"></script>
+    <script src="~/js/eAkte/modal-excel-export.js" asp-append-version="true"></script>
+
+    <!-- Kategorie, Hauptgruppe, Nebengruppe -->
+    <script src="~/js/KaHaNe/KaHaNe-core.js" asp-append-version="true"></script>
+    <script src="~/js/KaHaNe/KaHaNe-create.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

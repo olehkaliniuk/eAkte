@@ -1,0 +1,95 @@
+﻿/* ============================================================
+   INFO TABLE — VIERPALTEN-DETAILRASTER.
+   ============================================================ */
+
+/* Keine Hintergrundfarbe für Info-Zeilen. */
+.info-row {
+    background: transparent;
+}
+
+    .info-row:hover {
+        background-color: unset;
+    }
+
+/* Vierpalten-Raster als einzelne Karte. */
+.info-content {
+    display: grid;
+    grid-template-columns: max-content 1fr max-content 1fr;
+    row-gap: 0;
+    column-gap: 0;
+    margin: 4px 0;
+    background: var(--color-bg-second);
+    border: 0.5px solid var(--color-border-lines);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--box-shadows);
+}
+
+/* Display-Contents — Kinder landen direkt im Raster. */
+.info-item {
+    display: contents;
+}
+
+/* Beschriftungsstil — gedämpft, Großbuchstaben. */
+.info-label {
+    color: var(--info-table-label-text);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 9px 12px 9px 16px;
+    background: var(--color-bg);
+    border-bottom: 0.5px solid var(--info-lines);
+    border-right: 0.5px solid var(--info-lines);
+    white-space: nowrap;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+}
+
+/* Wert — heller Hintergrund, Zeilenumbruch erlaubt. */
+.info-value {
+    font-size: 0.8125rem;
+    color: var(--color-text);
+    padding: 9px 16px 9px 12px;
+    background: var(--color-bg-second);
+    border-bottom: 0.5px solid var(--info-lines);
+    border-right: 0.5px solid var(--info-lines);
+    word-break: break-word;
+    display: flex;
+    align-items: center;
+}
+
+/* Letzte zwei Elemente (gerade Anzahl) — untere Trennlinie entfernen. */
+.info-item:nth-last-of-type(-n+2) .info-label,
+.info-item:nth-last-of-type(-n+2) .info-value {
+    border-bottom: none;
+}
+
+/* Bei ungerader Anzahl: letztes Element ist auch das vorletzte —
+   border-bottom wieder setzen, da es allein in der letzten Zeile steht. */
+.info-item:last-child:nth-child(odd) .info-label,
+.info-item:last-child:nth-child(odd) .info-value {
+    border-bottom: none;
+}
+
+/* Das zweitletzte bei ungerader Anzahl bekommt border-bottom zurück,
+   weil es nicht wirklich in der letzten Zeile ist. */
+.info-item:nth-last-of-type(2):nth-child(even) .info-label,
+.info-item:nth-last-of-type(2):nth-child(even) .info-value {
+    border-bottom: 0.5px solid var(--info-lines);
+}
+
+/* Links im Wertfeld in Akzentfarbe. */
+.info-value a {
+    color: var(--color-accent);
+    text-decoration: none;
+    background: var(--blue-bg); /* Blau-50. */
+    padding: 3px 8px;
+    border-radius: var(--radius-md);
+}
+
+
+.m-word {
+    color: var(--color-text) !important;
+}

@@ -1,0 +1,104 @@
+﻿@using EAktePrototypProjektNewMvc.Models.Tree
+@model TreeItem
+
+<li class="tree-node" data-object-id="@Model.ObjectId" data-parent-object-id="@Model.ParentObjectId" data-loaded="false">
+    <div class="tree-item">
+
+    <!-- parent objektId -->
+    @* <small>@Model.ParentObjectId</small> *@
+    <!-- debug -->
+    @* <small style="color:#b8bceb">@Model.NodeType | hasChildren: @Model.HasChildren</small> *@
+
+    @if (Model.NodeType == "Dokument")
+    {
+        <span class="cant-toggle">
+                <i class="fa-solid fa-file-lines" style="color:#6481a5"></i>
+        </span>
+    }
+    else if (Model.HasChildren)
+    {
+        if (Model.NodeType == "Ordner")
+        {
+            <span class="toggle-icon icon-stack">
+                    <i class="fa-solid fa-folder" style="color:orange;" title="Klicken um eine eben tiefer zu navigieren."></i>
+                <i class="fa-solid fa-plus plus-overlay"></i>
+            </span>
+        }
+        else if (Model.NodeType == "UnterOrdner")
+        {
+            <span class="toggle-icon icon-stack">
+                    <i class="fa-solid fa-folder" style="color:@Model.ColorHex;" title="Klicken um eine eben tiefer zu navigieren."></i>
+                <i class="fa-solid fa-plus plus-overlay"></i>
+            </span>
+        }
+        else if (Model.NodeType == "Hauptgruppe" || Model.NodeType == "Nebengruppe" || Model.NodeType == "Akte" || Model.NodeType == "Vorgang" || Model.NodeType == "Kategorie")
+        {
+            <span class="toggle-icon">
+                @if (Model.Icon != null && Model.Icon.Length > 0)
+                {
+                    var base64 = Convert.ToBase64String(Model.Icon);
+                    var imgSrc = $"data:image/x-icon;base64,{base64}";
+
+                        <img src="@imgSrc" style="width:1em;" title="Klicken um eine eben tiefer zu navigieren." />
+                }
+                else
+                {
+                    <span class="toggle-icon">
+                            <i class="fa-solid fa-folder" title="Klicken um eine eben tiefer zu navigieren."></i>
+                    </span>
+                }
+            </span>
+              
+        }else
+        {
+            <span class="toggle-icon">
+                    <i class="fa-solid fa-folder" title="Klicken um eine eben tiefer zu navigieren."></i>
+            </span>
+        }     
+    }
+    else
+    {
+        if (Model.NodeType == "Ordner")
+        {
+            <span class="cant-toggle">
+                    <i class="fa-solid fa-folder" style="color:orange;" title="Diese Ebene hat keine weiteren Unterebenen."></i>
+            </span>
+        }
+        else if (Model.NodeType == "UnterOrdner")
+        {
+            <span class="cant-toggle">
+                    <i class="fa-solid fa-folder" style="color:@Model.ColorHex" title="Diese Ebene hat keine weiteren Unterebenen."></i>
+            </span>
+        }
+        else if (Model.NodeType == "Hauptgruppe" || Model.NodeType == "Nebengruppe" || Model.NodeType == "Akte" || Model.NodeType == "Vorgang" || Model.NodeType == "Kategorie")
+        {
+            <span class="cant-icon">
+                @if (Model.Icon != null && Model.Icon.Length > 0)
+                {
+                    var base64 = Convert.ToBase64String(Model.Icon);
+                    var imgSrc = $"data:image/x-icon;base64,{base64}";
+
+                        <img src="@imgSrc" style="width:1em;" title="Klicken um eine eben tiefer zu navigieren." />
+                }
+                else
+                {
+                    <span class="cant-icon">
+                            <i class="fa-solid fa-folder" title="Klicken um eine eben tiefer zu navigieren."></i>
+                    </span>
+                }
+            </span>
+
+        }
+        else
+        {
+            <span class="cant-toggle">
+                <i class="fa-regular fa-folder" title="Diese Ebene hat keine weiteren Unterebenen."></i>
+            </span>
+        }  
+    }
+
+        <a href="#" class="js-tree-node" data-object-id="@Model.ObjectId" data-node-type="@Model.NodeType">@Model.Title</a>
+    </div>
+</li>
+
+

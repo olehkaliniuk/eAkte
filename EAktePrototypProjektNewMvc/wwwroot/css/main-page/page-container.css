@@ -1,0 +1,15 @@
+﻿/* ============================================================
+   PAGE CONTAINER — HAUPTINHALTSBEREICH RECHTS.
+   ============================================================ */
+.page-container {
+    flex: 1; /* Gesamten verbleibenden Platz einnehmen. */
+    min-width: 0; /* Überlauf verhindern. */
+    position: relative;
+    height: 100%;
+}
+
+/* Volle Breite für Steuerelemente und Tabellencontainer. */
+.form-control{
+    width: 100%;
+    box-sizing: border-box;
+}

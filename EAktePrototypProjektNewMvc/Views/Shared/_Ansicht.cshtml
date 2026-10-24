@@ -1,0 +1,133 @@
+﻿<div class="topbuttons-container ansicht-dropdown">
+    <div class="dropdown">
+        <button class="dropdown-toggle dropdown-toggle--right" onclick="toggleDropdown(this)">
+            Ansicht <i class="fa-solid fa-chevron-down dropdown-toggle-icon"></i>
+        </button>
+        <div class="dropdown-menu">
+            <!-- Buttons werden dynamisch per JS eingefügt -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tabellen, für die eine Spalten-Personalisierung existiert.
+    // TabellenKey in der DB ist jetzt Singular, genau wie nodeType aus saveState —
+    // ein Mapping ist deshalb nicht mehr nötig, nodeType wird direkt als tableKey verwendet.
+    const PERSONALISIERBARE_TABELLEN = new Set(['Kategorie', 'Hauptgruppe', 'Nebengruppe', 'Akte', 'Vorgang', 'Ordner', 'UnterOrdner', 'Dokument']);
+
+    // toggleDropdown/toggleSubmenu kommen normalerweise aus dem "Aktionen"-Dropdown-Script,
+    // das auf derselben Seite eingebunden ist. Falls dieses Partial allein läuft,
+    // hier als Fallback definieren, damit nichts kaputtgeht.
+    if (typeof window.toggleDropdown !== 'function') {
+        window.toggleDropdown = function (btn) {
+            const menu = btn.nextElementSibling;
+            menu.classList.toggle('open');
+            btn.querySelector('.dropdown-toggle-icon').classList.toggle('rotated');
+
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!btn.parentElement.contains(e.target)) {
+                    menu.classList.remove('open');
+                    btn.querySelector('.dropdown-toggle-icon').classList.remove('rotated');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        };
+    }
+
+    // Liest den nodeType nicht aus history.state, sondern aus dem aktuell im
+    // tableContainer angezeigten Table-Partial. Dieses Feld ist dort IMMER vorhanden,
+    // auch wenn die Tabelle gerade leer ist (im Gegensatz zu data-node-type an <tr>).
+    function getCurrentNodeType() {
+        return document.getElementById('currentNodeType')?.value ?? null;
+    }
+
+    // Schließt das "Ansicht"-Dropdown-Menü (Klick innerhalb des Menüs schließt es sonst nicht automatisch).
+    function closeAnsichtMenu() {
+        const menu = document.querySelector('.ansicht-dropdown .dropdown-menu');
+        const toggle = document.querySelector('.ansicht-dropdown .dropdown-toggle');
+        menu?.classList.remove('open');
+        toggle?.querySelector('.dropdown-toggle-icon')?.classList.remove('rotated');
+    }
+
+    // Baut das Menü passend zur aktuell angezeigten Tabelle auf.
+    function renderAnsichtButtons() {
+        const menu = document.querySelector('.ansicht-dropdown .dropdown-menu');
+        if (!menu) return;
+
+        menu.innerHTML = '';
+
+        const nodeType = getCurrentNodeType();
+        const tableKey = nodeType && PERSONALISIERBARE_TABELLEN.has(nodeType) ? nodeType : null;
+
+        // Für Knoten ohne Tabellen-Personalisierung (z. B. Akte, Vorgang, Dokument, kein Knoten) gibt es nichts zu tun.
+        if (!tableKey) {
+            const info = document.createElement('div');
+            info.className = 'dropdown-empty';
+            info.innerHTML = '<i class="fa-solid fa-ban"></i> <div class="btn-divider"></div> Keine Ansicht-Einstellungen verfügbar';
+            menu.appendChild(info);
+            return;
+        }
+
+        // Öffnet den Spalten-Dialog (aus column-settings.js) für die aktuelle Tabelle.
+        const columnsBtn = document.createElement('button');
+        columnsBtn.innerHTML = '<i class="fa-solid fa-table-columns"></i> <div class="btn-divider"></div> Spalten anpassen';
+        columnsBtn.onclick = () => {
+            closeAnsichtMenu();
+            window.openColumnDialog(tableKey);
+        };
+        menu.appendChild(columnsBtn);
+
+        menu.appendChild(document.createElement('hr'));
+
+        // Setzt nur die persönliche Konfiguration DIESER Tabelle zurück.
+        const resetBtn = document.createElement('button');
+        resetBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> <div class="btn-divider"></div> Zurücksetzen für diesen Ablageort';
+        resetBtn.onclick = () => resetTableColumns(tableKey);
+        menu.appendChild(resetBtn);
+
+        menu.appendChild(document.createElement('hr'));
+
+        // Setzt die persönliche Konfiguration ALLER Tabellen zurück.
+        const resetAllBtn = document.createElement('button');
+        resetAllBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> <div class="btn-divider"></div> Zurücksetzen für alle Ablageorte';
+        resetAllBtn.onclick = resetAllTableColumns;
+        menu.appendChild(resetAllBtn);
+    }
+
+    // Ruft DELETE /spalten/{tableKey} auf, schließt das Menü und lädt die Seite komplett neu.
+    async function resetTableColumns(tableKey) {
+        if (!confirm('Spaltenansicht dieser Tabelle wirklich zurücksetzen?')) return;
+
+        const r = await fetch(`/spalten/${encodeURIComponent(tableKey)}`, { method: 'DELETE' });
+        if (!r.ok) { alert('Zurücksetzen fehlgeschlagen.'); return; }
+
+        closeAnsichtMenu();
+        location.reload();
+    }
+
+    // Ruft DELETE /spalten/alle auf, schließt das Menü und lädt die Seite komplett neu.
+    async function resetAllTableColumns() {
+        if (!confirm('Spaltenansicht aller Tabellen wirklich zurücksetzen?')) return;
+
+        const r = await fetch('/spalten/alle', { method: 'DELETE' });
+        if (!r.ok) { alert('Zurücksetzen fehlgeschlagen.'); return; }
+
+        closeAnsichtMenu();
+        location.reload();
+    }
+
+    // Neu rendern beim initialen Laden der Seite.
+    document.addEventListener('DOMContentLoaded', () => {
+        renderAnsichtButtons();
+    });
+
+    // Neu rendern, sobald sich der Inhalt des tableContainer ändert (Navigation zwischen
+    // Kategorie/Hauptgruppe/Nebengruppe lädt dort per AJAX ein neues Table-Partial nach).
+    // Damit bleibt "currentNodeType" immer aktuell, ohne dass an anderer Stelle im Code
+    // manuell renderAnsichtButtons() aufgerufen werden muss.
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('tableContainer');
+        if (!container) return;
+        new MutationObserver(renderAnsichtButtons).observe(container, { childList: true, subtree: false });
+    });
+</script>

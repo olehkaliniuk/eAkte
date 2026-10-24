@@ -1,0 +1,30 @@
+﻿@model (string FriendlyMessage, string ErrorDetails)
+
+@{
+    ViewData["Title"] = "Fehler";
+}
+<div class="page-container">
+    <div class="table-container-inner">
+        <div>
+            <div>
+                <h4>Ein Fehler ist aufgetreten</h4>
+                <p>@Model.FriendlyMessage</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ErrorDetails))
+            {
+                <details>
+                    <summary>Technische Details</summary>
+                    <pre>@Model.ErrorDetails</pre>
+                </details>
+            }
+
+            @* Session prüfen *@
+            @{
+                var isLoggedIn = Context.Session.GetInt32("UserId") != null;
+                var homeUrl = isLoggedIn ? "/bescheidbearbeitung" : "/";
+            }
+            <a href="@homeUrl">Zurück zur Startseite</a>
+        </div>
+    </div>
+</div>

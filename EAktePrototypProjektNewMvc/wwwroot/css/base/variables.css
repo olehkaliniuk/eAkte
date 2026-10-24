@@ -1,0 +1,138 @@
+﻿/* ============================================================
+   GOOGLE FONTS — IMPORT DER SCHRIFTARTEN.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+/* ============================================================
+   ROOT — HELLES THEME.
+   ============================================================ */
+:root {
+    /* Hintergrundfarben. */
+    --color-bg: #F4F5F7;
+    --color-bg-second: #FFFFFF;
+    --color-bg-third: #f4f5f7;
+    /* Textfarben. */
+    --color-text: #1C2128;
+    --color-text-hoover: #0D1117;
+    --color-text-select: #0D1117;
+    --color-text-small: rgba(0,0,0,0.38);
+    /* Akzentfarbe und Schaltflächen. */
+    --color-accent: #2563EB;
+    --color-accent-hover: #1D4ED8;
+    --color-btn-text: #FFFFFF;
+    --color-btn-green-bg: #dcfce7;
+    /* Eingabefelder. */
+    --color-input-bg: #FFFFFF;
+    --color-input-placeholder: #6B7280;
+    --color--input-border: rgba(0,0,0,0.12);
+    /* Navigation und Rahmenlinien. */
+    --color-nav-lines: rgba(0,0,0,0.15);
+    --color-border-lines: rgba(0,0,0,0.10);
+    /* Schatten — sehr dezent. */
+    --box-shadows: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --box-shadows-hoover: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+    /* Pfadleiste. */
+    --color-path-text: #FFFFFF;
+    --color-path-input-bg: #F4F5F7;
+    /* Kopfzeilenhöhe. */
+    --header-height: 0px;
+    /* Modalfenster-Farben. */
+    --modal-bg: #F8F9FA;
+    --modal-glass-bg: rgba(200,202,207,0.55);
+    /* Infotabelle. */
+    --info-table-label-text: #5A6270;
+    --info-lines: rgba(0,0,0,0.10);
+    /* Scrollleiste. */
+    --scrollbar-thumb: rgba(0,0,0,0.14);
+    --scrollbar-thumb-hoover: rgba(0,0,0,0.26);
+    /* Rahmen-Radius-Skala. */
+    --radius-sm: 0.2857rem; /* 4px */
+    --radius-md: 0.6429rem; /* 9px */
+    --radius-lg: 0.8571rem; /* 12px */
+    --radius-xl: 1.1429rem; /* 16px */
+    /* Sortier-Pfeile — Farbe und heller Hintergrund. */
+    --color-sort-asc: #16a34a;
+    --color-sort-asc-bg: rgba(22,163,74,0.08);
+    --color-sort-desc: #dc2626;
+    --color-sort-desc-bg: rgba(220,38,38,0.08);
+    /* Green */
+    --color-green-bg: rgba(22,163,74,0.08);
+    /* blue background */
+    --blue-bg: #E6F1FB;
+    --color-red-bg: #fef2f2;
+    --color-red-border: rgba(220, 38, 38, 0.20);
+    --color-red-text: #dc2626;
+    --color-red-icon: #dc2626;
+    /* Green alert (positiv) */
+    --color-green-bg: #f0fdf4;
+    --color-green-border: rgba(22, 163, 74, 0.20);
+    --color-green-text: #16a34a;
+    --color-green-icon: #16a34a;
+}
+
+/* ============================================================
+   DUNKLES THEME.
+   ============================================================ */
+html.dark-theme {
+    /* Hintergrundfarben. */
+    --color-bg: #393939;
+    --color-bg-second: #272727;
+    --color-bg-third: #353535;
+    /* Textfarben. */
+    --color-text: #CDD1D8;
+    --color-text-hoover: #E6E8EC;
+    --color-text-select: #F0F2F5;
+    --color-text-small: #c7c7c7;
+    /* Akzentfarbe — identisch mit hellem Theme. */
+    --color-accent: #2563EB;
+    --color-accent-hover: #1D4ED8;
+    --color-btn-text: #F0F2F5;
+    --color-btn-green-bg: #10311b;
+    /* Eingabefelder. */
+    --color-input-bg: #353535;
+    --color-input-placeholder: #6B7280;
+    --color--input-border: rgba(255,255,255,0.08);
+    /* Navigation und Rahmenlinien. */
+    --color-nav-lines: rgba(255,255,255,0.12);
+    --color-border-lines: rgba(255,255,255,0.07);
+    /* Schatten im dunklen Theme deaktiviert. */
+    --box-shadows: none;
+    --box-shadows-hoover: none;
+    /* Pfadleiste. */
+    --color-path-text: #F0F2F5;
+    --color-path-input-bg: #27282C;
+    /* Modalfenster-Farben. */
+    --modal-bg: #27282C;
+    --modal-glass-bg: rgba(50,52,58,0.70);
+    /* Infotabelle. */
+    --info-table-label-text: #989da7;
+    --info-lines: rgba(255,255,255,0.07);
+    /* Scrollleiste. */
+    --scrollbar-thumb: rgba(255,255,255,0.08);
+    --scrollbar-thumb-hoover: rgba(255,255,255,0.15);
+    /* Rahmen-Radius-Skala. */
+    --radius-sm: 0.2857rem; /* 4px */
+    --radius-md: 0.6429rem; /* 9px */
+    --radius-lg: 0.8571rem; /* 12px */
+    --radius-xl: 1.1429rem; /* 16px */
+    /* Sortier-Pfeile — Farbe und heller Hintergrund. */
+    --color-sort-asc: #16a34a;
+    --color-sort-asc-bg: rgba(22,163,74,0.08);
+    --color-sort-desc: #dc2626;
+    --color-sort-desc-bg: rgba(220,38,38,0.08);
+    /* Green */
+    --color-green-bg: rgba(22,163,74,0.08);
+    /* blue background */
+    --blue-bg: #e6f1fb08;
+    --color-red-bg: #2c1a1a;
+    --color-red-border: rgba(220, 38, 38, 0.10);
+    --color-red-text: #f87171;
+    --color-red-icon: #f87171;
+    /* Green alert (positiv) */
+    --color-green-bg: #16241a;
+    --color-green-border: rgba(22, 163, 74, 0.10);
+    --color-green-text: #4ade80;
+    --color-green-icon: #4ade80;
+}
+
+

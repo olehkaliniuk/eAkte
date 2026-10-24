@@ -1,0 +1,191 @@
+﻿/* ============================================================
+   CONTEXT MENU
+   ============================================================ */
+.context-menu {
+    position: absolute;
+    display: none;
+    background: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    z-index: 9999;
+    overflow: visible;
+    min-width: 160px;
+    padding: 4px; /* Abstand, damit der Hover-Hintergrund nicht am Rand klebt */
+}
+
+.context-menu-item {
+    padding: 3px 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text);
+    border-radius: calc(var(--radius-md) - 2px); /* Eigene Rundung statt Abhängigkeit von Position */
+    border-bottom: none; /* Trennlinie ersetzt durch Abstand zwischen Items */
+}
+
+    .context-menu-item + .context-menu-item {
+        margin-top: 2px;
+    }
+
+    .context-menu-item:hover {
+        background: var(--color-accent);
+        color: var(--color-btn-text);
+    }
+
+        .context-menu-item:hover i {
+            color: var(--color-btn-text);
+        }
+
+/* ============================================================
+   RENAME INPUT
+   ============================================================ */
+.rename-input {
+    padding: 0 4px;
+    border-color: transparent;
+    margin-left: 0;
+    background: transparent;
+}
+
+    .rename-input:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px var(--color-bg-second) inset !important;
+        -webkit-text-fill-color: var(--color-input-placeholder) !important;
+    }
+
+    .rename-input:hover,
+    .rename-input:focus {
+        border-color: transparent;
+        outline: none;
+    }
+
+/* ============================================================
+   SUBMENU (Email)
+   ============================================================ */
+.context-menu-item.has-submenu {
+    position: relative;
+}
+
+.submenu-arrow {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: inherit;
+}
+
+.submenu {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    min-width: 200px;
+    background: var(--color-bg-second);
+    border: 1px solid var(--color-border-lines);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.context-menu-item.has-submenu.open > .submenu {
+    display: block;
+}
+
+.context-menu-item.has-submenu.open {
+    background: var(--color-accent);
+    color: var(--color-btn-text);
+}
+
+    .context-menu-item.has-submenu.open i {
+        color: var(--color-btn-text);
+    }
+
+.submenu .context-menu-item {
+    padding: 3px 8px;
+}
+
+
+
+/* ============================================================
+   Wiederviorlage Modal
+   ============================================================ */
+
+.wv-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+    .wv-overlay.open {
+        display: flex;
+    }
+
+.wv-modal {
+    background: #fff;
+    border-radius: 6px;
+    padding: 20px 24px;
+    width: 420px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.3);
+    font-family: inherit;
+}
+
+.wv-header {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.wv-label {
+    display: block;
+    font-size: 13px;
+    margin: 10px 0 4px;
+    color: #444;
+}
+
+.wv-row {
+    display: flex;
+    gap: 8px;
+}
+
+.wv-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.wv-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.wv-btn {
+    padding: 7px 14px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font: inherit;
+}
+
+.wv-btn-pri {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.wv-btn-sec {
+    background: #f1f1f1;
+    border-color: #ccc;
+}
+
+.wv-btn[disabled] {
+    opacity: .6;
+    cursor: default;
+}

@@ -1,0 +1,185 @@
+﻿/* ============================================================
+   USER / PROFILE CARDS — BENUTZER- UND PROFILKARTEN.
+   ============================================================ */
+
+/* Allgemeine Karte — flacher weißer Block mit feinem Rahmen. */
+.card {
+    background-color: var(--color-bg-second);
+    border: 0.5px solid var(--color-border-lines);
+    border-radius: 9px;
+    padding: 0; /* Innenabstand kommt von den Kinder-Elementen. */
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: var(--box-shadows);
+}
+
+/* Profilkarte — blauer Akzentstreifen oben. */
+.profile-card::before {
+    content: '';
+    display: block;
+    height: 6px;
+    background: var(--color-accent);
+    border-radius: 9px;
+}
+
+/* Karten-Kopfzeile mit kleinem Titel und Icon. */
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 0.5px solid var(--color-border-lines);
+    margin-bottom: 0;
+}
+
+    /* Kopfzeilen-Titel — gedämpft, Großbuchstaben, kompakt. */
+    .card-header h3 {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-text-small);
+        margin: 0;
+    }
+
+/* Profil-Layout — Avatar links, Name + Rolle rechts. */
+.profile-content {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 20px 24px;
+}
+
+/* Runder Avatar mit blauem Akzent-Hintergrund. */
+.avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--blue-bg); /* Blau-50. */
+    border: 2px solid rgba(37, 99, 235, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--color-accent);
+    flex-shrink: 0;
+}
+
+/* Profilname — etwas größer, leicht komprimiert. */
+.profile-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+    /* Administrator-Abzeichen — Pill im Blaustil. */
+    .profile-content h4 span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--color-accent); /* Blau-600. */
+        background: var(--blue-bg); /* Blau-50. */
+        padding: 3px 8px;
+        border-radius: var(--radius-md);
+    }
+
+/* Rolle unter dem Namen. */
+.role {
+    font-size: 0.8125rem;
+    color: var(--color-text-small);
+    margin: 0;
+}
+
+/* Zweispaltiges Raster ohne Gap — Trennlinien kommen von Zellen. */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+    /* Einzelne Feldzelle. */
+    .info-grid > div {
+        padding: 14px 24px;
+        border-bottom: 0.5px solid var(--color-border-lines);
+        border-right: 0.5px solid var(--color-border-lines);
+    }
+
+        /* Rechte Spalte — kein rechter Rand. */
+        .info-grid > div:nth-child(even) {
+            border-right: none;
+        }
+
+        /* Letzte zwei Zellen — kein unterer Rand. */
+        .info-grid > div:nth-last-child(-n+2) {
+            border-bottom: none;
+        }
+
+        /* Letztes einzelnes Element bei ungerader Anzahl —
+   unterer Rand bleibt, da es allein in der Zeile steht. */
+        .info-grid > div:last-child:nth-child(odd) {
+            border-bottom: 0.5px solid var(--color-border-lines);
+            border-right: none;
+        }
+
+
+
+/* Kleine Feldbeschriftung in Großbuchstaben. */
+.label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-small);
+    margin-bottom: 4px;
+}
+
+/* Feldwert — etwas stärker als normal. */
+.info-grid > div p {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+
+
+.admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    background: var(--blue-bg);
+    padding: 4px 10px;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    transition: background 0.15s, color 0.15s;
+}
+
+    .admin-link:hover {
+        background: var(--blue-bg);
+        color: #0f3f7a;
+    }
+
+.top-user-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.referat-text-info {
+    color: var(--color-accent);
+}

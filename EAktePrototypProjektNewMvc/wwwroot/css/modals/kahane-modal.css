@@ -1,0 +1,70 @@
+﻿.icon-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: -2px;
+}
+
+.icon-preview {
+    width: 2rem; /* 28px */
+    height: 2rem; /* 28px */
+    border: 1px dashed var(--border-color, var(--color-accent));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+    .icon-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+.icon-placeholder {
+    color: var(--color-accent);
+    font-size: 1rem;
+}
+
+.icon-upload-actions {
+    display: flex;
+    gap: 8px;
+}
+
+
+.list-abt-ref {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color--input-border);
+    margin-bottom: 10px;
+}
+
+.list-abt-ref-name {
+    color: var(--color-text-small);
+}
+
+
+/* Active State */
+.list-abt-ref:has(input[type="checkbox"]:checked) .list-abt-ref-name {
+    color: var(--color-accent);
+}
+
+.abt-group-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+    .abt-group-header::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background-color: var(--color--input-border);
+        margin-left: 10px; 
+    }
+
+.ab-ref-scroll-box {
+    max-height: 31.43rem; /* 300px*/
+    overflow-y: auto;
+}

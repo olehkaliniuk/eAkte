@@ -1,0 +1,445 @@
+﻿/* ============================================================
+   GEBÜHREN — MINIMALISTISCH, ABGERUNDET, EINE HINTERGRUNDFARBE.
+   ============================================================ */
+
+/* Tabelle als abgerundete Karte. */
+#gebuehrenTable {
+    background: var(--color-bg-second);
+    color: var(--color-text);
+    border-collapse: separate; /* Nötig für abgerundete Ecken. */
+    border-spacing: 0;
+    border: 1px solid var(--color-border-lines);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+    /* ---- Tabellenkopf: nur Text und eine Linie ---- */
+    #gebuehrenTable > thead th {
+        background: transparent;
+        color: var(--color-text-small);
+        border-bottom: 1px solid var(--color-border-lines);
+        border-right: none;
+        padding: 10px 12px;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+
+    /* ---- Hauptzeile ---- */
+    #gebuehrenTable tr.main-row > td {
+        background: transparent;
+        color: var(--color-text);
+        border-bottom: 1px solid var(--color-border-lines);
+        border-right: none;
+        padding: 11px 12px;
+        cursor: pointer;
+        transition: background .15s, color .15s;
+    }
+
+    #gebuehrenTable tr.main-row:hover > td {
+        background: var(--blue-bg);
+        color: var(--color-text-hoover);
+    }
+
+    /* Pfeil-Spalte: Hintergrund folgt der Zeile (Normal, Hover, Ausgewählt). */
+    #gebuehrenTable td.arrow-cell {
+        color: var(--color-text-small);
+        text-align: center;
+        font-size: 0.7rem;
+        border-right: none;
+    }
+
+    #gebuehrenTable tr.main-row:hover > td.arrow-cell {
+        color: var(--color-text-hoover);
+    }
+
+    /* Pfeil: ▶ zu, ▼ offen (wird vom JS per Klasse "open" gesteuert). */
+    #gebuehrenTable tr.main-row > td.arrow-cell::before {
+        content: "\25B6";
+    }
+
+    #gebuehrenTable tbody.open tr.main-row > td.arrow-cell::before {
+        content: "\25BC";
+    }
+
+    /* Lupen-Icon. */
+    #gebuehrenTable td.icon-cell svg {
+        display: block;
+        margin: 0 auto;
+    }
+
+        #gebuehrenTable td.icon-cell svg circle {
+            fill: none;
+            stroke: var(--color-accent);
+        }
+
+        #gebuehrenTable td.icon-cell svg line {
+            stroke: var(--color-accent);
+        }
+
+    /* ---- Ausgewählte Zeile ---- */
+    #gebuehrenTable tbody.selected tr.main-row > td,
+    #gebuehrenTable tbody.selected tr.main-row:hover > td {
+        background: var(--color-accent);
+        color: var(--color-btn-text);
+        font-weight: 600;
+    }
+
+        #gebuehrenTable tbody.selected tr.main-row > td.arrow-cell,
+        #gebuehrenTable tbody.selected tr.main-row:hover > td.arrow-cell {
+            color: var(--color-btn-text);
+        }
+
+    #gebuehrenTable tbody.selected td.icon-cell svg circle,
+    #gebuehrenTable tbody.selected td.icon-cell svg line {
+        stroke: var(--color-btn-text);
+    }
+
+    /* ---- Detailzeile: versteckt, bis tbody die Klasse "open" hat (für das JS nötig) ---- */
+    #gebuehrenTable tr.detail-row {
+        display: none;
+    }
+
+    #gebuehrenTable tbody.open tr.detail-row {
+        display: table-row;
+    }
+
+    #gebuehrenTable tr.detail-row > td {
+        padding: 0;
+        border-bottom: none;
+        border-right: none;
+    }
+
+        #gebuehrenTable tr.detail-row > td.arrow-cell::before {
+            content: none;
+        }
+
+    /* Eingerückter, abgerundeter Block mit den Titeln. */
+    #gebuehrenTable .detail-wrap {
+        margin: 6px 12px 12px 12px;
+        border: 1px solid var(--color-border-lines);
+        border-radius: 9px;
+        overflow: hidden;
+    }
+
+    /* ---- Untertabelle (Titel): nur waagerechte Linien ---- */
+    #gebuehrenTable .sub th,
+    #gebuehrenTable .sub td {
+        background: transparent;
+        color: var(--color-text);
+        border: none;
+        border-bottom: 1px solid var(--color-border-lines);
+        padding: 8px 12px;
+        font-size: 0.8125rem;
+    }
+
+    #gebuehrenTable .sub thead th {
+        color: var(--color-text-small);
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+    }
+
+    #gebuehrenTable .sub tbody tr:hover td {
+        background: var(--blue-bg);
+    }
+
+    /* Geldbeträge (Spalten 3–5) rechtsbündig. */
+    #gebuehrenTable .sub th:nth-child(n+3),
+    #gebuehrenTable .sub td:nth-child(n+3) {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    /* Offener Betrag leicht hervorgehoben. */
+    #gebuehrenTable .sub td:last-child {
+        font-weight: 600;
+    }
+
+    /* ---- Mail-Zeile (Gebührenbescheid an) ---- */
+    #gebuehrenTable .mail-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-top: none;
+        background: var(--color-bg-third);
+    }
+
+    #gebuehrenTable .mail-icon {
+        display: flex;
+        align-items: center;
+        color: var(--color-text-small);
+        border: none;
+        padding: 0;
+    }
+
+        #gebuehrenTable .mail-icon svg {
+            width: 1rem; 
+        }
+
+    #gebuehrenTable .icon-cell svg {
+        width: 1rem;
+    }
+
+
+        #gebuehrenTable .mail-icon svg rect {
+            fill: none;
+            stroke: currentColor;
+        }
+
+        #gebuehrenTable .mail-icon svg path {
+            stroke: currentColor;
+        }
+
+    #gebuehrenTable .mail-text {
+        color: var(--color-text);
+        font-size: 0.8125rem;
+        padding: 0;
+    }
+
+        #gebuehrenTable .mail-text a {
+            color: var(--color-text);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+            #gebuehrenTable .mail-text a:hover {
+                color: var(--color-accent-hover);
+            }
+
+
+
+.akte-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
+
+/* Formular unter der Tabelle: sichtbar, solange das Attribut "hidden" fehlt. */
+.g-neu-panel:not([hidden]) {
+    margin-top: 12px;
+    background: var(--color-bg-second);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-lines);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.g-neu-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border-lines);
+}
+
+.g-neu-title {
+    font-weight: 600;
+}
+
+.g-neu-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.g-neu-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .g-neu-table th, .g-neu-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--color-border-lines);
+        text-align: left;
+    }
+
+    .g-neu-table th {
+        color: var(--color-text-small);
+        font-size: .75rem;
+    }
+
+        .g-neu-table td:last-child, .g-neu-table th:last-child {
+            width: 220px;
+            white-space: nowrap;
+        }
+
+    .g-neu-table select {
+        width: 100%;
+    }
+
+    .g-neu-table input.g-betrag {
+        width: 150px;
+        text-align: right;
+    }
+
+.g-neu-felder {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+}
+
+    .g-neu-felder label {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        align-items: start;
+        gap: 8px;
+    }
+
+.g-neu-iban {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+    .g-neu-iban label {
+        grid-template-columns: 50px 1fr;
+    }
+
+
+
+
+
+.g-edit-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.g-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 12px;
+    align-content: start;
+}
+
+    .g-info > div {
+        border: 1px solid var(--color-border-lines);
+        border-radius: 6px;
+        padding: 8px 12px;
+    }
+
+    .g-info small {
+        display: block;
+        color: var(--color-text-small);
+        font-size: .75rem;
+    }
+
+    .g-info span {
+        min-height: 1.2em;
+        display: block;
+    }
+
+
+/* Schaltflächen als eine zusammenhängende Leiste. */
+.create-akte-btn-container .btn-group {
+    display: inline-flex;
+    border-radius: 9px;
+    overflow: hidden; /* Rundung gilt für die ganze Leiste */
+    border: 1px solid var(--color-border-lines);
+}
+
+    .create-akte-btn-container .btn-group .akte-btn {
+        border-radius: 0; /* einzelne Rundungen entfernen */
+        border: none;
+        margin: 0;
+        box-shadow: none;
+    }
+
+        /* Trennlinie zwischen den Schaltflächen. */
+        .create-akte-btn-container .btn-group .akte-btn + .akte-btn {
+            border-left: 1px solid rgba(255, 255, 255, .25);
+        }
+
+        /* Deaktivierte Schaltflächen: Trennlinie bleibt sichtbar, Hover ohne Wirkung. */
+        .create-akte-btn-container .btn-group .akte-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+
+
+
+
+
+/* Testspalte: gestrichelt und grünlich, damit sie als vorläufig erkennbar ist. */
+#gebuehrenTable .sub th.test-col,
+#gebuehrenTable .sub td.test-col {
+    background: repeating-linear-gradient( -45deg, rgba(40, 167, 69, .10), rgba(40, 167, 69, .10) 6px, rgba(40, 167, 69, .20) 6px, rgba(40, 167, 69, .20) 12px );
+    border-left: 1px dashed #28a745;
+    border-right: 1px dashed #28a745;
+    font-style: italic;
+}
+
+#gebuehrenTable .sub th.test-col {
+    color: #1e7e34;
+}
+
+
+
+/* Negativer offener Betrag in der Gebühr = Rückzahlung (Auszahlung). */
+#gebuehrenTable .sub td.rueckzahlung {
+    color: #b3261e;
+}
+
+#gebuehrenTable .rueckzahlung-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 9px;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    color: #b3261e;
+    background: rgba(179, 38, 30, .10);
+    border: 1px solid rgba(179, 38, 30, .35);
+    vertical-align: middle;
+}
+
+
+/* Lupe standardmäßig, Stift nur wenn "Bearbeiten" für die Zeile erlaubt ist. */
+#gebuehrenTable tr.main-row .icon-stift {
+    display: none;
+}
+
+#gebuehrenTable tr.main-row.edit-ok .icon-lupe {
+    display: none;
+}
+
+#gebuehrenTable tr.main-row.edit-ok .icon-stift {
+    display: block;
+}
+
+#gebuehrenTable tr.main-row.edit-ok td.icon-cell {
+    cursor: pointer;
+}
+
+#gebuehrenTable td.icon-cell svg path {
+    fill: none;
+    stroke: var(--color-accent);
+}
+
+#gebuehrenTable tbody.selected td.icon-cell svg path {
+    stroke: var(--color-btn-text);
+}
+
+
+/*footer */
+.g-fuss {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+    padding: 12px 16px;
+    margin-top: 12px;
+    background: var(--color-bg-third);
+    border: 1px solid var(--color-border-lines);
+    border-radius: 9px;
+    font-size: .8125rem;
+    color: var(--color-text);
+}
+
+.g-fuss-spalte {
+    display: grid;
+    gap: 4px;
+    align-content: start;
+}
